@@ -5,7 +5,7 @@ import java.util.LinkedList;
 
 import npc.NPC;
 
-public class GameAbstract implements Game {
+public abstract class GameAbstract implements Game {
     private int gameTime;
     private int currentGameTime;
     private int maxPlayers;
