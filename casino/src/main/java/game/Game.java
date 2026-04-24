@@ -18,6 +18,9 @@ interface Game {
     double getWinChance();
     LinkedList<NPC> getPlayerQueue();
     ArrayList<NPC> getCurrentPlayers();
+    boolean isGameInProgress();
+    void startGame();
+    void stopGame();
     void setMaxPlayers(int maxPlayers);
     void setCurrentPlayerNum(int currentPlayerNum);
     void setTotalPlayers(int totalPlayers);

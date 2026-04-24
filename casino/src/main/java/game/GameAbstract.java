@@ -16,6 +16,7 @@ public abstract class GameAbstract implements Game {
     private double winChance;
     private LinkedList<NPC> playerQueue;
     private ArrayList<NPC> currentPlayers;
+    private boolean gameInProgress;
 
     public GameAbstract(int maxPlayers, int minBet, double cashOutMult, double winChance, int gameTime){
         this.gameTime = gameTime;
@@ -27,6 +28,7 @@ public abstract class GameAbstract implements Game {
         totalPlayers = 0;
         playerQueue = new LinkedList<NPC>();
         currentPlayers = new ArrayList<NPC>(0);
+        gameInProgress = false;
     }
 
     public int getMaxPlayers(){
@@ -75,6 +77,21 @@ public abstract class GameAbstract implements Game {
 
     public ArrayList<NPC> getCurrentPlayers(){
         return currentPlayers;
+    }
+
+    public boolean isGameInProgress(){
+        return gameInProgress;
+    }
+
+    public void startGame(){
+        currentGameTime = gameTime;
+        fillCurrentPlayersFromQueue();
+        gameInProgress = true;
+    }
+
+    public void stopGame(){
+        gameInProgress = false;
+        
     }
 
     public void setMaxPlayers(int maxPlayers){
