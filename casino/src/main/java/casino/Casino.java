@@ -73,4 +73,12 @@ public class Casino {
     public void addGame(GameAbstract game){
         games.add(game);
     }
+
+    public void removePlayer(NPC player){
+        players.remove(player);
+    }
+
+    public void removeGame(GameAbstract game){
+        games.remove(game);
+    }
 }
