@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import npc.NPC;
 
 public abstract class GameAbstract implements Game {
+    private String type;
     private int gameTime;
     private int currentGameTime;
     private int maxPlayers;
@@ -18,7 +19,8 @@ public abstract class GameAbstract implements Game {
     private ArrayList<NPC> currentPlayers;
     private boolean gameInProgress;
 
-    public GameAbstract(int maxPlayers, int minBet, double cashOutMult, double winChance, int gameTime){
+    public GameAbstract(String type, int maxPlayers, int minBet, double cashOutMult, double winChance, int gameTime){
+        this.type = type;
         this.gameTime = gameTime;
         this.maxPlayers = maxPlayers;
         this.minBet = minBet;
@@ -29,6 +31,10 @@ public abstract class GameAbstract implements Game {
         playerQueue = new LinkedList<NPC>();
         currentPlayers = new ArrayList<NPC>(0);
         gameInProgress = false;
+    }
+
+    public String getType(){
+        return type;
     }
 
     public int getMaxPlayers(){

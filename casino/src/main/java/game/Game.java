@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import npc.NPC;
 
 interface Game {
+    String getType();
     int getMaxPlayers();
     int getCurrentPlayerNum();
     int getTotalPlayers();
