@@ -81,4 +81,20 @@ public class Casino {
     public void removeGame(GameAbstract game){
         games.remove(game);
     }
+
+    public void updateGameTimes(int change){
+        for (int i = 0; i < games.size(); i++){
+            games.get(i).updateCurrentGameTime(change);
+        }
+    }
+
+    public ArrayList<GameAbstract> findGameByType(String type){
+        ArrayList<GameAbstract> gamesByType = new ArrayList<GameAbstract>();
+        for (GameAbstract game : games) {
+            if (game.getType() == type) {
+                gamesByType.add(game);
+            }
+        }
+        return gamesByType;
+    }
 }
