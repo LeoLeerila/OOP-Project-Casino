@@ -12,14 +12,14 @@ public abstract class GameAbstract implements Game {
     private int maxPlayers;
     private int currentPlayerNum;
     private int totalPlayers;
-    private int minBet;
+    private double minBet;
     private double cashOutMult;
     private double winChance;
     private LinkedList<NPC> playerQueue;
     private ArrayList<NPC> currentPlayers;
     private boolean gameInProgress;
 
-    public GameAbstract(String type, int maxPlayers, int minBet, double cashOutMult, double winChance, int gameTime){
+    public GameAbstract(String type, int maxPlayers, double minBet, double cashOutMult, double winChance, int gameTime){
         this.type = type;
         this.gameTime = gameTime;
         this.maxPlayers = maxPlayers;
@@ -49,7 +49,7 @@ public abstract class GameAbstract implements Game {
         return totalPlayers;
     }
 
-    public int getMinBet(){
+    public double getMinBet(){
         return minBet;
     }
 

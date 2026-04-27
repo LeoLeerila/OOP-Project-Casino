@@ -10,7 +10,7 @@ interface Game {
     int getMaxPlayers();
     int getCurrentPlayerNum();
     int getTotalPlayers();
-    int getMinBet();
+    double getMinBet();
     int getGameTime();
     int getCurrentGameTime();
     int getPlayerIndexFromCurrentPlayers(NPC player);
