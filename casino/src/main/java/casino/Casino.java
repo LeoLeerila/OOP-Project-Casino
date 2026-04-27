@@ -88,6 +88,16 @@ public class Casino {
         }
     }
 
+    public int getLowestGameTime(){
+        int lowestGameTime = Integer.MAX_VALUE;
+        for (int i = 0; i < games.size(); i++){
+            if (games.get(i).getCurrentGameTime() < lowestGameTime) {
+                lowestGameTime = games.get(i).getCurrentGameTime();
+            }
+        }
+        return lowestGameTime;
+    }
+
     public ArrayList<GameAbstract> findGameByType(String type){
         ArrayList<GameAbstract> gamesByType = new ArrayList<GameAbstract>();
         for (GameAbstract game : games) {
