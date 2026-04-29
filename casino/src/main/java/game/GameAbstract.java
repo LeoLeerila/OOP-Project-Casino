@@ -92,12 +92,13 @@ public abstract class GameAbstract implements Game {
     public void startGame(){
         currentGameTime = gameTime;
         fillCurrentPlayersFromQueue();
+        // TODO: loop all players, call getPlayerBet method 
         gameInProgress = true;
     }
 
     public void stopGame(){
         gameInProgress = false;
-        
+        // TODO: loop all players, if rng > winChance, call getCurrentBet method, call setPlayerMoney method
     }
 
     public void setMaxPlayers(int maxPlayers){
