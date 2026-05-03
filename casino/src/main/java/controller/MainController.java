@@ -1,17 +1,75 @@
 package controller;
-import casino.Casino;
-import game.GameAbstract;
-import game.Blackjack;
+import javafx.application.Platform;
+import simu.framework.IEngine;
+import simu.model.Casino;
+import simu.model.MyEngine;
+import simu.model.game.GameAbstract;
+import simu.model.game.Blackjack;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
+import view.ISimulatorUI;
 
-public class MainController {
+public class MainController implements IControllerVtoM, IControllerMtoV {
     //Huom: kuvakaappauksen perusteella olevat muuttujat
     //Käyttäjän napit
+    private Casino casino = new Casino();
+    private IEngine engine;
+    private ISimulatorUI ui;
+    private Thread simulationThread;
+    private boolean isSimulationPaused = false;
+
+    public MainController(){}
+    public void setUI(ISimulatorUI ui){
+        this.ui = ui;
+    }
+
+    @Override
+    public void startSimulation() {
+        if (simulationThread != null && simulationThread.isAlive()) {
+            resetSimulation();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        engine = new MyEngine(this); // new Engine thread is created for every simulation
+        engine.setSimulationTime(ui.getTime());
+        engine.setDelay(ui.getDelay());
+        ui.getVisualisation().clearDisplay();
+        EventlogContainer.clear();
+        simulationThread = (Thread) engine;
+        simulationThread.start();
+    }
+    @FXML
+    public Label EndingTime;
+    @Override
+    public void decreaseSpeed() { // hidastetaan moottorisäiettä
+        engine.setDelay((long)(engine.getDelay()*1.10));
+    }
+
+    @Override
+    public void increaseSpeed() { // nopeutetaan moottorisäiettä
+        engine.setDelay((long)(engine.getDelay()*0.9));
+    }
+    @Override
+    public void logEvent(String message) {
+        Platform.runLater(() -> EventlogContainer.appendText(message + "\n"));
+    }
+    @Override
+    public void showEndTime(double time) {
+        Platform.runLater(()->ui.setEndingTime(time));
+    }
+
+    @Override
+    public void visualiseCustomer() {
+        Platform.runLater(() -> ui.getVisualisation().newCustomer());
+    }
     @FXML
     private Button StartBtn;
     @FXML
@@ -31,34 +89,53 @@ public class MainController {
     @FXML
     private VBox StatisticsContainer;
     @FXML
-    private VBox EventlogContainer;
+    private TextArea EventlogContainer;
 
     @FXML
     public void initialize() {
-        //Initialize casino and other necessary variables
-        Casino casino = new Casino();
+        //Initialize simu.model.casino and other necessary variables
+
         GameAbstract blackjack = new Blackjack(4, 10, 1.5, 0.3, 10);
-        //Set up event handlers for buttons
-        /*
+        casino.addGame(blackjack);
+        displayStatistics();
         StartBtn.setOnAction(e -> startSimulation());
         PauseBtn.setOnAction(e -> pauseSimulation());
         ResetBtn.setOnAction(e -> resetSimulation());
-        AddPlayerBtn.setOnAction(e -> casino.addPlayer());
+        //Set up event handlers for buttons
+        /*
+        AddPlayerBtn.setOnAction(e -> simu.model.casino.addPlayer());
         */
     }
 
+    public void pauseSimulation(){
+        isSimulationPaused = !isSimulationPaused;
+        if(engine != null) {
+            engine.setPaused(isSimulationPaused);
+        }
+    }
+    public void resetSimulation(){
+        if(engine != null) {
+            engine.setReset(true);
+            ((Thread) engine).interrupt();
+            engine = new MyEngine(this);
+            ui.getVisualisation().clearDisplay();
+            isSimulationPaused = false;
+            simulationThread = null;
+        }
+    }
+
     public void displayGameTable(){
-        //Get game tables (loop, or just manually add all GameAbstract stuff) ->
+        //Get simu.model.game tables (loop, or just manually add all GameAbstract stuff) ->
             //New Vbox/hbox -> Style new container
-            //Add some game table info to vbox/hbox
+            //Add some simu.model.game table info to vbox/hbox
             //GameTableContainer.getChildren().add(newContainer);
     }
     //trigger based
     public void displayGameTableDetails(){
         //GameTableDetailContainer.getChildren().clear();
-        //Get clicked game table (ex. clickedBlackjack) -> find match (loop?) ->
+        //Get clicked simu.model.game table (ex. clickedBlackjack) -> find match (loop?) ->
             //New Vbox/hbox -> Style new container
-            //Add all game table info to vbox/hbox
+            //Add all simu.model.game table info to vbox/hbox
             //Add content manipulation buttons
             //   (Ex.) Button winChanceBtn = new Button();
             //      -> winChanceBtn.setOnAction(e -> clickedBlackjack.setWinChance(valueFromAField));
@@ -68,14 +145,15 @@ public class MainController {
 
     //call in a simulation loop to maintain constant data updating for user.
     public void displayStatistics(){
-        //StatisticsContainer.getChildren().clear();
-        //String somevar = casino.getTotalRevenue() + "€";
+        Label fillerText = new Label("Statistics and relevant data: ");
+        Label totalRevenue = new Label("Total Revenue: " + casino.getTotalRevenue() + "€");
+        Label totalLoaned = new Label("Total loaned: " + casino.getTotalLoaned() + "€");
+        Label totalPlayers = new Label("Total players: " + casino.getTotalPlayers());
+        StatisticsContainer.getChildren().clear();
+        StatisticsContainer.getChildren().addAll(fillerText, totalRevenue, totalLoaned, totalPlayers);
+        //String somevar = simu.model.casino.getTotalRevenue() + "€";
         //Label totalRevenueLabel = new Label(somevar);
         //StatisticsContainer.getChildren().add(totalRevenueLabel);
         //(...repeat a shite lot for other relevant stats)
-    }
-
-    public void EventlogUpdater(){
-        //No idea how to do this, but basically just add new events to the EventlogContainer as they happen in the casino.
     }
 }
