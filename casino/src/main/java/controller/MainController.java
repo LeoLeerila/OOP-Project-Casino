@@ -1,5 +1,6 @@
 package controller;
 import javafx.application.Platform;
+import javafx.scene.control.*;
 import simu.framework.IEngine;
 import simu.model.Casino;
 import simu.model.MyEngine;
@@ -7,10 +8,6 @@ import simu.model.game.GameAbstract;
 import simu.model.game.Blackjack;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 import view.ISimulatorUI;
 
@@ -90,6 +87,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     private VBox StatisticsContainer;
     @FXML
     private TextArea EventlogContainer;
+    @FXML
+    private Accordion GameTableAccordion;
 
     @FXML
     public void initialize() {
@@ -101,6 +100,15 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         StartBtn.setOnAction(e -> startSimulation());
         PauseBtn.setOnAction(e -> pauseSimulation());
         ResetBtn.setOnAction(e -> resetSimulation());
+        GameTableAccordion.expandedPaneProperty().addListener((obs, oldPane, newPane) -> {
+            GameTableDetailContainer.getChildren().clear();
+
+            if (newPane == null) {
+                return;
+            }
+
+            displayGameTableDetails(newPane);
+        });
         //Set up event handlers for buttons
         /*
         AddPlayerBtn.setOnAction(e -> simu.model.casino.addPlayer());
@@ -131,7 +139,14 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             //GameTableContainer.getChildren().add(newContainer);
     }
     //trigger based
-    public void displayGameTableDetails(){
+    public void displayGameTableDetails(TitledPane selectedPane){
+        GameTableDetailContainer.getChildren().clear();
+
+        Label title = new Label("Selected table: " + selectedPane.getText());
+        Label status = new Label("Status: open");
+        Label players = new Label("Players: 0");
+
+        GameTableDetailContainer.getChildren().addAll(title, status, players);
         //GameTableDetailContainer.getChildren().clear();
         //Get clicked simu.model.game table (ex. clickedBlackjack) -> find match (loop?) ->
             //New Vbox/hbox -> Style new container
