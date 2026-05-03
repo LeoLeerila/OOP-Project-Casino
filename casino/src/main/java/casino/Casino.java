@@ -125,4 +125,31 @@ public class Casino {
         }
         return gamesByType;
     }
+
+    //TODO: NPC model boolean isInGame(), String getPrefGame(), void toggleInGame()
+    public void handleFreePlayers(){
+        ArrayList<NPC> freePlayers = new ArrayList<>();
+        for (NPC player : players) {
+            if (!player.isInGame()) {
+                freePlayers.add(player);
+            }
+        }
+        for (NPC player : freePlayers) {
+            ArrayList<GameAbstract> availableGames = new ArrayList<>();
+            for (GameAbstract game : games){
+                if (game.getPlayerQueueSize() < game.getMaxPlayers() && game.getMinBet() < player.getMoneyChips()) {
+                    availableGames.add(game);
+                }
+            }
+            for (GameAbstract game : availableGames) {
+                if (game.getType() == player.getPrefGame()) {
+                    game.addPlayerToQueue(player);
+                    player.toggleInGame();
+                }
+            }
+            if (!player.isInGame()) {
+                availableGames.get(0).addPlayerToQueue(player);
+            }
+        }
+    }
 }
