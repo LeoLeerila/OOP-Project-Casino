@@ -1,5 +1,7 @@
 package simu.model;
 
+import simu.model.game.GameAbstract;
+
 import java.util.ArrayList;
 
 public class NPC {
@@ -17,12 +19,12 @@ public class NPC {
     private ArrayList<String> differentGames = new ArrayList<>();
     private boolean isInGame;
 
-    public NPC(int minMoney,int maxMoney, int moneyChange, String[] gameList){
+    public NPC(int minMoney,int maxMoney, int moneyChange, ArrayList<GameAbstract> gameList){
         this.money = (int) Math.round(Math.random() * (maxMoney-minMoney+1)) + minMoney;
         this.chips = (int) Math.round(this.money / moneyChange);
         this.casinoLoanWill = (int)(Math.random() * 100) + 1;
         this.chipsTarget = (int) Math.round(this.chips+((this.chips * Math.random())*2));
-        this.gamePreference = gameList[(int) (Math.random() * (gameList.length))];
+        this.gamePreference = String.valueOf(gameList.get((int) (Math.random() * (gameList.size()))));
         this.id = _id++;
     }
     public void casinoLoan(int amount){
