@@ -3,7 +3,6 @@ package simu.model;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import simu.model.NPC;
 import simu.model.game.GameAbstract;
 
 public class Casino {
@@ -84,6 +83,7 @@ public class Casino {
     }
 
     public void addPlayer(NPC player){
+        addRevenueChange(player.getMoney());
         players.add(player);
         totalPlayers++;
     }
@@ -93,6 +93,8 @@ public class Casino {
     }
 
     public void removePlayer(NPC player){
+        addRevenueChange(-1 * player.getChipsToMoney());
+        //player.setRemovalTime(time);
         players.remove(player);
     }
 
@@ -126,7 +128,6 @@ public class Casino {
         return gamesByType;
     }
 
-    //TODO: NPC model boolean isInGame(), String getPrefGame(), void toggleInGame(), Double getMoneyChips()
     public void handleFreePlayers(){
         ArrayList<NPC> freePlayers = new ArrayList<>();
         for (NPC player : players) {
@@ -147,8 +148,11 @@ public class Casino {
                     player.toggleInGame();
                 }
             }
-            if (!player.IsInGame()) {
+            if (!player.IsInGame() && availableGames.size() > 0) {
                 availableGames.get(0).addPlayerToQueue(player);
+                player.toggleInGame();
+            } else {
+                removePlayer(player);
             }
         }
     }
