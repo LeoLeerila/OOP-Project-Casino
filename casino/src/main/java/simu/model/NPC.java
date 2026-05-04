@@ -16,7 +16,7 @@ public class NPC {
     private int chips; // & fish
     private int chipsTarget;
     private int casinoLoan = 0;
-    private int casinoLoanWill;
+    private double casinoLoanWill;
     private int totalGamesPlayed;
     private int differentGamesPlayed;
     private String gamePreference;
@@ -28,7 +28,7 @@ public class NPC {
         this.convesion = moneyChange;
         this.money = (int) Math.round(Math.random() * (maxMoney-minMoney+1)) + minMoney;
         this.chips = (int) Math.round(this.money / convesion);
-        this.casinoLoanWill = (int) Math.round(Math.random() * 100) + 1;
+        this.casinoLoanWill = Math.random();
         this.chipsTarget = (int) Math.round(this.chips+((this.chips * Math.random())*2));
         this.gamePreference = gameList.get((int) (Math.random() * (gameList.size()))).getType();
         this.id = _id++;
@@ -69,7 +69,7 @@ public class NPC {
     }
     //get wall
     public int getCasinoLoan() {return casinoLoan;}
-    public int getCasinoLoanWill() {return casinoLoanWill;}
+    public double getCasinoLoanWill() {return casinoLoanWill;}
     public int getDifferentGamesPlayed() {return differentGamesPlayed;}
     public double getMoney() {return money;}
     public int getChips() {return chips;}
