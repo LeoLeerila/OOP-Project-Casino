@@ -52,6 +52,7 @@ public class NPC {
     public String getGamePreference() {return gamePreference;}
     public int getChipsTarget() {return chipsTarget;}
     public int getId() {return id;}
+    public boolean IsInGame(){return isInGame;}
     public double getRemovalTime() {return removalTime;}
     public double getArrivalTime() {return arrivalTime;}
 }
