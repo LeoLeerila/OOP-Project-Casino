@@ -107,7 +107,9 @@ public abstract class GameAbstract implements Game {
                 player.addChips((int) Math.round(player.getBet() * cashOutMult));
             }
             player.toggleInGame();
-            removePlayerFromCurrentPlayers(player);
+        }
+        while (currentPlayers.size() > 0) {
+            removePlayerFromCurrentPlayers(currentPlayers.get(0));
         }
     }
 
