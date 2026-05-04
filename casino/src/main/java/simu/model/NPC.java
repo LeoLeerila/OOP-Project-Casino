@@ -1,5 +1,10 @@
 package simu.model;
 
+import simu.framework.Clock;
+import simu.model.game.GameAbstract;
+
+import java.util.ArrayList;
+
 public class NPC {
     private static int _id;
     private int id;
