@@ -29,8 +29,13 @@ public class MyEngine extends Engine {
 		//arrivalProcess = new ArrivalProcess(new Negexp(5.0), EventType.ARRIVAL);
 		//eventList.add(arrivalProcess.nextEvent());
 		//
+		double t_t = 1;
 		for(double t = 1; t<= simulationTime; t++){
-			eventList.add(new Event(EventType.NPC_ARRIVAL, t));
+			if (t_t == t){
+				eventList.add(new Event(EventType.NPC_ARRIVAL, t));
+				t_t = t + 3;
+			}
+			eventList.add(new Event(EventType.TIME_ADVANCE, t));
 		}
 	}
 	//overwrite Engine.java run method to be able to pause and reset simu (was not fun)
@@ -75,6 +80,9 @@ public class MyEngine extends Engine {
 	protected void runEvent(Event t) {  // B phase events
 		if (t.getType() == EventType.NPC_ARRIVAL) {
 			controller.createPlayer();
+		}
+		if (t.getType() == EventType.TIME_ADVANCE){
+			controller.timeAdvance();
 		}
 
 		//create new customer ->

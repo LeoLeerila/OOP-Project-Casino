@@ -7,4 +7,6 @@ public interface IControllerMtoV {
 		public void logEvent(String message);
 
 		public void createPlayer();
+
+		void timeAdvance();
 }

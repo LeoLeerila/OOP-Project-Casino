@@ -13,6 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
+import simu.model.game.Poker;
 import view.ISimulatorUI;
 
 public class MainController implements IControllerVtoM, IControllerMtoV {
@@ -56,6 +57,15 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     public void createPlayer(){
         NPC player = casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames()));
         logEvent(String.valueOf(player));
+    }
+    public void timeAdvance(){
+        casino.startGames();
+        casino.updateGameTimes(-1 * casino.getLowestGameTime());
+        casino.handleFreePlayers();
+        casino.calculateRevenueChange();
+        casino.calculateLoanedChange();
+        logEvent("Revee: "+casino.getTotalRevenue());
+
     }
     @FXML
     public Label EndingTime;
@@ -105,9 +115,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     @FXML
     public void initialize() {
         //Initialize simu.model.casino and other necessary variables
-
+        GameAbstract poker = new Poker(5, 40, 20, 0.5, 20);
         GameAbstract blackjack = new Blackjack(4, 10, 1.5, 0.3, 10);
         casino.addGame(blackjack);
+        casino.addGame(poker);
         displayStatistics();
         StartBtn.setOnAction(e -> startSimulation());
         PauseBtn.setOnAction(e -> pauseSimulation());
