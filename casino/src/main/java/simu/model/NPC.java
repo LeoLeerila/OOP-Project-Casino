@@ -6,8 +6,9 @@ public class NPC {
     private double arrivalTime;
     private double removalTime;
 
+    private int convesion;
     private double money;
-    private int chips;
+    private int chips; // & fish
     private int chipsTarget;
     private int casinoLoan = 0;
     private int casinoLoanWill;
@@ -16,17 +17,20 @@ public class NPC {
     private String gamePreference;
     private ArrayList<String> differentGames = new ArrayList<>();
     private boolean isInGame;
+    private int lastBet;
 
     public NPC(int minMoney,int maxMoney, int moneyChange, ArrayList<GameAbstract> gameList){
+        this.convesion = moneyChange;
         this.money = (int) Math.round(Math.random() * (maxMoney-minMoney+1)) + minMoney;
-        this.chips = (int) Math.round(this.money / moneyChange);
+        this.chips = (int) Math.round(this.money / convesion);
         this.casinoLoanWill = (int) Math.round(Math.random() * 100) + 1;
         this.chipsTarget = (int) Math.round(this.chips+((this.chips * Math.random())*2));
-        this.gamePreference = String.valueOf(gameList.get((int) (Math.random() * (gameList.size()))));
+        this.gamePreference = gameList.get((int) (Math.random() * (gameList.size()))).getType();
         this.id = _id++;
         this.arrivalTime = Clock.getInstance().getTime();
 
     }
+
     public void casinoLoan(int amount){
         chips += amount;casinoLoan += amount;
     }
@@ -36,6 +40,18 @@ public class NPC {
             differentGamesPlayed++;
         }
         this.totalGamesPlayed++;
+    }
+    public void setBet(int minBet){
+        int fish = (int) Math.round(minBet+(Math.random()*(chipsTarget)));
+        if (fish > chips){ //heh
+            this.lastBet = chips;
+        }else {
+            this.lastBet = fish;
+        }
+        chips -= lastBet;
+    }
+    public void addChips(int chips){
+        this.chips += chips;
     }
     public void toggleInGame(){
         isInGame = !isInGame;
@@ -53,6 +69,8 @@ public class NPC {
     public int getChipsTarget() {return chipsTarget;}
     public int getId() {return id;}
     public boolean IsInGame(){return isInGame;}
+    public double getChipsToMoney(){return chips * convesion;}
+    public int getBet(){return lastBet;}
     public double getRemovalTime() {return removalTime;}
     public double getArrivalTime() {return arrivalTime;}
 }
