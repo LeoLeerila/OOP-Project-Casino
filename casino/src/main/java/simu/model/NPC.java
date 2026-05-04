@@ -21,6 +21,7 @@ public class NPC {
     private String gamePreference;
     private ArrayList<String> differentGames = new ArrayList<>();
     private boolean isInGame;
+    private int lastBet;
 
     public NPC(int minMoney,int maxMoney, int moneyChange, ArrayList<GameAbstract> gameList){
         this.money = (int) Math.round(Math.random() * (maxMoney-minMoney+1)) + minMoney;
@@ -41,6 +42,13 @@ public class NPC {
             differentGamesPlayed++;
         }
         this.totalGamesPlayed++;
+    }
+    public void setBet( int bet){
+        this.chips -= chips;
+        this.lastBet = bet;
+    }
+    public void addChips(int chips){
+        this.chips += chips;
     }
     public void toggleInGame(){
         isInGame = !isInGame;
