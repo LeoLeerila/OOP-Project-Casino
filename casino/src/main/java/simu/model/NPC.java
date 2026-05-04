@@ -25,18 +25,16 @@ public class NPC {
     public NPC(int minMoney,int maxMoney, int moneyChange, ArrayList<GameAbstract> gameList){
         this.money = (int) Math.round(Math.random() * (maxMoney-minMoney+1)) + minMoney;
         this.chips = (int) Math.round(this.money / moneyChange);
-        this.casinoLoanWill = (int)(Math.random() * 100) + 1;
+        this.casinoLoanWill = (int) Math.round(Math.random() * 100) + 1;
         this.chipsTarget = (int) Math.round(this.chips+((this.chips * Math.random())*2));
         this.gamePreference = String.valueOf(gameList.get((int) (Math.random() * (gameList.size()))));
         this.id = _id++;
         this.arrivalTime = Clock.getInstance().getTime();
 
     }
-
     public void casinoLoan(int amount){
         chips += amount;casinoLoan += amount;
     }
-
     public void GamePlayed(String gameName){
         if (!differentGames.contains(gameName)){
             differentGames.add(gameName);
@@ -44,11 +42,11 @@ public class NPC {
         }
         this.totalGamesPlayed++;
     }
-
     public void toggleInGame(){
         isInGame = !isInGame;
     }
-
+    public void setArrivalTime(double arrivalTime) {this.arrivalTime = arrivalTime;}
+    public void setRemovalTime(double removalTime) {this.removalTime = removalTime;}
     //get wall
     public int getCasinoLoan() {return casinoLoan;}
     public int getCasinoLoanWill() {return casinoLoanWill;}
@@ -59,16 +57,6 @@ public class NPC {
     public String getGamePreference() {return gamePreference;}
     public int getChipsTarget() {return chipsTarget;}
     public int getId() {return id;}
-    public double getRemovalTime() {
-        return removalTime;
-    }
-    public void setRemovalTime(double removalTime) {
-        this.removalTime = removalTime;
-    }
-    public double getArrivalTime() {
-        return arrivalTime;
-    }
-    public void setArrivalTime(double arrivalTime) {
-        this.arrivalTime = arrivalTime;
-    }
+    public double getRemovalTime() {return removalTime;}
+    public double getArrivalTime() {return arrivalTime;}
 }
