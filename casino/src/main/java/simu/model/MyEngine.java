@@ -30,7 +30,7 @@ public class MyEngine extends Engine {
 		//eventList.add(arrivalProcess.nextEvent());
 		//
 		for(double t = 1; t<= simulationTime; t++){
-			eventList.add(new Event(EventType.ARR1, t));
+			eventList.add(new Event(EventType.NPC_ARRIVAL, t));
 		}
 	}
 	//overwrite Engine.java run method to be able to pause and reset simu (was not fun)
@@ -73,8 +73,8 @@ public class MyEngine extends Engine {
 	//now THIS is where we actually spawn simuation activity
 	@Override
 	protected void runEvent(Event t) {  // B phase events
-		if (t.getType() == EventType.ARR1) {
-			controller.logEvent("A second has passed");
+		if (t.getType() == EventType.NPC_ARRIVAL) {
+			controller.createPlayer();
 		}
 
 		//create new customer ->

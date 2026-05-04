@@ -3,6 +3,7 @@ import javafx.application.Platform;
 import simu.framework.IEngine;
 import simu.model.Casino;
 import simu.model.MyEngine;
+import simu.model.NPC;
 import simu.model.game.GameAbstract;
 import simu.model.game.Blackjack;
 
@@ -18,6 +19,12 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     //Huom: kuvakaappauksen perusteella olevat muuttujat
     //Käyttäjän napit
     private Casino casino = new Casino();
+
+    //get money/conversion from elsewhere this data is temp
+    private int minNPCMoney = 100;
+    private int maxNPCMoney = 10000;
+    private int ChipConvesion = 15;
+
     private IEngine engine;
     private ISimulatorUI ui;
     private Thread simulationThread;
@@ -45,6 +52,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         EventlogContainer.clear();
         simulationThread = (Thread) engine;
         simulationThread.start();
+    }
+    public void createPlayer(){
+        NPC player = casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames()));
+        logEvent(String.valueOf(player));
     }
     @FXML
     public Label EndingTime;
@@ -102,9 +113,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         PauseBtn.setOnAction(e -> pauseSimulation());
         ResetBtn.setOnAction(e -> resetSimulation());
         //Set up event handlers for buttons
-        /*
-        AddPlayerBtn.setOnAction(e -> simu.model.casino.addPlayer());
-        */
+
+        AddPlayerBtn.setOnAction(e -> casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames())));
+
     }
 
     public void pauseSimulation(){

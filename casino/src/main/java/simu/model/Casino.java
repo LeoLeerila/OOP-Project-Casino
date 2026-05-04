@@ -10,13 +10,11 @@ public class Casino {
     private LinkedList<Double> casinoRevenueChange;
     private double totalLoaned;
     private LinkedList<Double> casinoLoanedChange;
-    private double conversion;
     private int totalPlayers;
     private ArrayList<NPC> players;
     private ArrayList<GameAbstract> games;
 
-    public Casino(double conversion){
-        this.conversion = conversion;
+    public Casino(){
         totalRevenue = 0.0;
         totalLoaned = 0.0;
         totalPlayers = 0;
@@ -36,10 +34,6 @@ public class Casino {
 
     public double getTotalPlayers(){
         return totalPlayers;
-    }
-
-    public double getConversionRate(){
-        return conversion;
     }
 
     public ArrayList<NPC> getCurrentPlayers(){
@@ -69,23 +63,11 @@ public class Casino {
             totalLoaned += casinoLoanedChange.removeFirst();
         }
     }
-
-    public void setConversionRate(double conversion){
-        this.conversion = conversion;
-    }
-
-    public int convertMoneyToChips(double money){
-        return (int)Math.round(money * conversion);
-    }
-
-    public double convertChipsToMoney(int chips){
-        return chips / conversion;
-    }
-
-    public void addPlayer(NPC player){
+    public NPC addPlayer(NPC player){
         addRevenueChange(player.getMoney());
         players.add(player);
         totalPlayers++;
+        return player;
     }
 
     public void addGame(GameAbstract game){
