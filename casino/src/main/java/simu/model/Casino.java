@@ -85,8 +85,19 @@ public class Casino {
     }
 
     public void updateGameTimes(int change){
-        for (int i = 0; i < games.size(); i++){
-            games.get(i).updateCurrentGameTime(change);
+        for (GameAbstract game : games){
+            game.updateCurrentGameTime(change);
+            if (game.getCurrentGameTime() <= 0) {
+                game.stopGame();
+            }
+        }
+    }
+
+    public void startGames(){
+        for (GameAbstract game : games) {
+            if (!game.isGameInProgress()) {
+                game.startGame();
+            }
         }
     }
 
@@ -124,8 +135,9 @@ public class Casino {
                     availableGames.add(game);
                 }
             }
+            
             for (GameAbstract game : availableGames) {
-                if (game.getType() == player.getGamePreference()) {
+                if (game.getType() == player.getGamePreference() && !player.IsInGame()) {
                     game.addPlayerToQueue(player);
                     player.toggleInGame();
                 }
@@ -133,7 +145,7 @@ public class Casino {
             if (!player.IsInGame() && availableGames.size() > 0) {
                 availableGames.get(0).addPlayerToQueue(player);
                 player.toggleInGame();
-            } else {
+            } else if (!player.IsInGame()) {
                 removePlayer(player);
             }
         }
