@@ -49,7 +49,7 @@ public abstract class GameAbstract implements Game {
         return totalPlayers;
     }
 
-    public double getMinBet(){
+    public int getMinBet(){
         return minBet;
     }
 
@@ -93,12 +93,22 @@ public abstract class GameAbstract implements Game {
         currentGameTime = gameTime;
         fillCurrentPlayersFromQueue();
         // TODO: loop all players, call getPlayerBet method 
+        for (NPC player : currentPlayers){
+            player.setBet(minBet);
+        }
         gameInProgress = true;
     }
 
     public void stopGame(){
         gameInProgress = false;
         // TODO: loop all players, if rng > winChance, call getCurrentBet method, call setPlayerMoney method
+        for (NPC player : currentPlayers) {
+            if (Math.random() > winChance) {
+                player.addChips((int) Math.round(player.getBet() * cashOutMult));
+            }
+            player.toggleInGame();
+            removePlayerFromCurrentPlayers(player);
+        }
     }
 
     public void setMaxPlayers(int maxPlayers){
@@ -148,10 +158,8 @@ public abstract class GameAbstract implements Game {
         return playerQueue.removeFirst();
     }
 
-    public NPC removePlayerFromCurrentPlayers(int index){
-        NPC removedPlayer = currentPlayers.remove(index);
+    public void removePlayerFromCurrentPlayers(NPC player){
+        currentPlayers.remove(player);
         currentPlayerNum--;
-        fillCurrentPlayersFromQueue();
-        return removedPlayer;
     }
 }
