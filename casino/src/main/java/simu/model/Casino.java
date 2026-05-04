@@ -1,10 +1,10 @@
-package casino;
+package simu.model;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import npc.NPC;
-import game.GameAbstract;
+import simu.model.NPC;
+import simu.model.game.GameAbstract;
 
 public class Casino {
     private double totalRevenue;
@@ -126,7 +126,7 @@ public class Casino {
         return gamesByType;
     }
 
-    //TODO: NPC model boolean isInGame(), String getPrefGame(), void toggleInGame()
+    //TODO: NPC model boolean isInGame(), String getPrefGame(), void toggleInGame(), Double getMoneyChips()
     public void handleFreePlayers(){
         ArrayList<NPC> freePlayers = new ArrayList<>();
         for (NPC player : players) {

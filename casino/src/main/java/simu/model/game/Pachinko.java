@@ -1,4 +1,4 @@
-package game;
+package simu.model.game;
 
 public class Pachinko extends GameAbstract {
     public Pachinko(int maxPlayers, int minBet, double cashOutMult, double winChance, int gameTime){

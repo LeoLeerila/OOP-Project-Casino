@@ -1,9 +1,9 @@
-package game;
+package simu.model.game;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import npc.NPC;
+import simu.model.NPC;
 
 interface Game {
     String getType();

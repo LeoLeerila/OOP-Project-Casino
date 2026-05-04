@@ -1,4 +1,4 @@
-package game;
+package simu.model.game;
 
 public class Bingo extends GameAbstract {
     public Bingo(int maxPlayers, int minBet, double cashOutMult, double winChance, int gameTime){

@@ -1,4 +1,4 @@
-package npc;
+package simu.model;
 
 public class NPC {
     private static int _id;

@@ -1,4 +1,4 @@
-package game;
+package simu.model.game;
 
 public class Slotmachine extends GameAbstract {
     public Slotmachine(int maxPlayers, int minBet, double cashOutMult, double winChance, int gameTime){
