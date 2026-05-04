@@ -65,7 +65,7 @@ public class NPC {
     public void setRemovalTime(double removalTime) {this.removalTime = removalTime;}
     @Override
     public String toString(){
-        return "NPC: "+id+", Money: "+money+", MoneyChange(10)&Target: "+chips+"/"+chipsTarget+", CasinoWill: "+casinoLoanWill+"%, GamePreference: "+gamePreference;
+        return "NPC: "+id+", Money: "+money+", Chips&Target: "+chips+"/"+chipsTarget+"("+convesion+")"+", CasinoWill: "+casinoLoanWill+"%, GamePreference: "+gamePreference;
     }
     //get wall
     public int getCasinoLoan() {return casinoLoan;}
