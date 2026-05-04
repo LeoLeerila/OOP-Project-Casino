@@ -30,7 +30,7 @@ public class NPC {
         this.chips = (int) Math.round(this.money / convesion);
         this.casinoLoanWill = (int) Math.round(Math.random() * 100) + 1;
         this.chipsTarget = (int) Math.round(this.chips+((this.chips * Math.random())*2));
-        this.gamePreference = String.valueOf(gameList.get((int) (Math.random() * (gameList.size()))));
+        this.gamePreference = gameList.get((int) (Math.random() * (gameList.size()))).getType();
         this.id = _id++;
         this.arrivalTime = Clock.getInstance().getTime();
 
