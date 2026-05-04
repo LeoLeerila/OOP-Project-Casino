@@ -1,5 +1,6 @@
 package simu.model;
 
+import simu.framework.Clock;
 import simu.model.game.GameAbstract;
 
 import java.util.ArrayList;
@@ -7,6 +8,8 @@ import java.util.ArrayList;
 public class NPC {
     private static int _id;
     private int id;
+    private double arrivalTime;
+    private double removalTime;
 
     private double money;
     private int chips;
@@ -26,7 +29,10 @@ public class NPC {
         this.chipsTarget = (int) Math.round(this.chips+((this.chips * Math.random())*2));
         this.gamePreference = String.valueOf(gameList.get((int) (Math.random() * (gameList.size()))));
         this.id = _id++;
+        this.arrivalTime = Clock.getInstance().getTime();
+
     }
+
     public void casinoLoan(int amount){
         chips += amount;casinoLoan += amount;
     }
@@ -53,4 +59,16 @@ public class NPC {
     public String getGamePreference() {return gamePreference;}
     public int getChipsTarget() {return chipsTarget;}
     public int getId() {return id;}
+    public double getRemovalTime() {
+        return removalTime;
+    }
+    public void setRemovalTime(double removalTime) {
+        this.removalTime = removalTime;
+    }
+    public double getArrivalTime() {
+        return arrivalTime;
+    }
+    public void setArrivalTime(double arrivalTime) {
+        this.arrivalTime = arrivalTime;
+    }
 }
