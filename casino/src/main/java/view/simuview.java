@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 
 public class simuview extends Application implements ISimulatorUI {
     private double simulationTime = 1000.0;
-    private long delay = 100;
+    private long delay = 500;
     private IVisualisation visualisation = new IVisualisation() {
         @Override
         public void clearDisplay() {}

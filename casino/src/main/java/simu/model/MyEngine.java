@@ -8,17 +8,23 @@ import simu.framework.*;
 
 public class MyEngine extends Engine {
 	private ArrivalProcess arrivalProcess;
+	private final Object pauseLock = new Object();
 
 	public MyEngine(IControllerMtoV controller){ //Apua
 		super(controller);
 		Trace.setTraceLevel(Trace.Level.INFO);
-		//Kun aletaan lisäämään pelipöytiä jotka toimis SP:nä, ServicePoint.Java vois muuttua interfaceks
+		//Kun aletaan lisäämään pelipöytiä jotka toimis SP:nä, ServicePoint.java vois muuttua interfaceks
 		//-jonka gameAbstract implementoi. Sillee ei ehkä tarttis säätää uudelleen kirjoittamisen kans
 		servicePoints = new ServicePoint[0];
 	}
 	@Override
 	public void setPaused(boolean paused){
-		this.isPaused = paused;
+		synchronized (pauseLock) {
+			this.isPaused = paused;
+			if (!isPaused) {
+				pauseLock.notifyAll();
+			}
+		}
 	}
 	@Override
 	public void setReset(boolean reset){
@@ -26,15 +32,13 @@ public class MyEngine extends Engine {
 	}
 	@Override
 	protected void initialization() {
-		//arrivalProcess = new ArrivalProcess(new Negexp(5.0), EventType.ARRIVAL);
-		//eventList.add(arrivalProcess.nextEvent());
-		//
-		double t_t = 1;
+		double arrivalInterval = 3.0;
+		double next = arrivalInterval;
+		while(next <= simulationTime) {
+			eventList.add(new Event(EventType.NPC_ARRIVAL, next));
+			next += arrivalInterval;
+		}
 		for(double t = 1; t<= simulationTime; t++){
-			if (t_t == t){
-				eventList.add(new Event(EventType.NPC_ARRIVAL, t));
-				t_t = t + 3;
-			}
 			eventList.add(new Event(EventType.TIME_ADVANCE, t));
 		}
 	}
@@ -44,50 +48,60 @@ public class MyEngine extends Engine {
 		initialization();
 		//check to make sure simulation is actually running
 		while(Clock.getInstance().getTime() < simulationTime && !isReset) {
-			while (isPaused) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					break;
+			//improved pause handling
+			synchronized (pauseLock){
+				while (isPaused && !isReset) {
+					try {
+						pauseLock.wait();
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						break;
+					}
 				}
 			}
+			if (isReset) break;
+
 			//Log time and delay for debugging purposes
 			Trace.out(Trace.Level.INFO, "Time is: " + Clock.getInstance().getTime());
 			Trace.out(Trace.Level.INFO, "Delay " + getDelay());
-
 			try {
-				sleep(getDelay());
+				Thread.sleep(getDelay());
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				Thread.currentThread().interrupt();
+				break;
 			}
 
-			//A whole bunch of hoohaa that I don't actually quite get. It is however very necessary for the simulation to work.
-			Clock.getInstance().setTime(eventList.getNextTime());
-			while (eventList.getNextTime() == Clock.getInstance().getTime()){
-				runEvent(eventList.remove());
-			}
-			for (ServicePoint p : servicePoints) {
-				if(!p.isReserved() && p.isOnQueue()) {
-					p.beginService();
+			//Updated: Process all events (events and continuous) at the next time point
+			try {
+				double nextEventTime = eventList.getNextTime();
+				Clock.getInstance().setTime(nextEventTime);
+				while (eventList.getNextTime() == Clock.getInstance().getTime()){
+					Event event = eventList.remove();
+					runEvent(event);
 				}
+
+				for (ServicePoint p : servicePoints) {
+					if(!p.isReserved() && p.isOnQueue()) {
+						p.beginService();
+					}
+				}
+			} catch (Exception e) {
+				Trace.out(Trace.Level.ERR, "Error during simulation: " + e.getMessage());
+				e.printStackTrace();
 			}
 		}
 		results();
 	}
 
-	//now THIS is where we actually spawn simuation activity
 	@Override
-	protected void runEvent(Event t) {  // B phase events
+	protected void runEvent(Event t) {
 		if (t.getType() == EventType.NPC_ARRIVAL) {
+			//-> MainController -> Queues player
 			controller.createPlayer();
 		}
 		if (t.getType() == EventType.TIME_ADVANCE){
 			controller.timeAdvance();
 		}
-
-		//create new customer ->
-		//Send them to game table ->
-		//Schedule next arrival ->
 	}
 
 	@Override
