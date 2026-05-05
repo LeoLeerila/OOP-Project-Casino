@@ -4,7 +4,7 @@ import controller.IControllerMtoV;
 import simu.model.ServicePoint;
 
 public abstract class Engine extends Thread implements IEngine {  // NEW DEFINITIONS
-	public double simulationTime = 0;	// time when the simulation will be stopped
+	public double simulationTime = 0;
 	private long delay = 0;
 	private Clock clock;				// in order to simplify the code (clock.getClock() instead Clock.getInstance().getClock())
 	public volatile boolean isPaused = false;
@@ -12,10 +12,10 @@ public abstract class Engine extends Thread implements IEngine {  // NEW DEFINIT
 
 	protected EventList eventList;
 	protected ServicePoint[] servicePoints;
-	protected IControllerMtoV controller; // NEW
+	protected IControllerMtoV controller;
 
-	public Engine(IControllerMtoV controller) {	// NEW
-		this.controller = controller;  			// NEW
+	public Engine(IControllerMtoV controller) {
+		this.controller = controller;
 		clock = Clock.getInstance();
 		eventList = new EventList();
 		/* Service Points are created in simu.model-package's class who is inheriting the Engine class */

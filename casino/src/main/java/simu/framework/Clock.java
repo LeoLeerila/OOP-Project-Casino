@@ -15,7 +15,7 @@ public class Clock {
 		return instance;
 	}
 	
-	public void setTime(double time){
+	public synchronized void setTime(double time){
 		this.time = time;
 	}
 

@@ -1,0 +1,19 @@
+arrlist freeplayers = arrlist
+forloop player : players
+if !player.isInGame()
+  freeplayers.add(player)
+endloop
+forloop player : freeplayers
+  arrlist availableGames = arrlist
+  forloop game : games
+    if game.playerQueue().size < game.getMaxPlayers() && game.getMinBet() < player.getMoneyChips()
+    availableGames.add(game)
+  endloop
+  forloop game : availableGames
+    if game.getType() == player.getPrefGame()
+      game.addPlayerToQueue(player)
+      player.toggleInGame()
+  endloop
+  if !player.isInGame()
+   availableGames.get(0).addPlayerToQueue(player)
+endloop

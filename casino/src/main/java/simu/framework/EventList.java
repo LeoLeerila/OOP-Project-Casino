@@ -17,7 +17,9 @@ public class EventList {
 	}
 	
 	public double getNextTime(){
-		return lista.peek().getTime();
+		//null check
+        assert lista.peek() != null;
+        return lista.peek().getTime();
 	}
 	
 	

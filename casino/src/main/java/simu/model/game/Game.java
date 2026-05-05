@@ -33,6 +33,6 @@ interface Game {
     void addPlayerToCurrentPlayers(NPC player);
     void fillCurrentPlayersFromQueue();
     NPC removePlayerFromQueue();
-    NPC removePlayerFromCurrentPlayers(int index);
+    void removePlayerFromCurrentPlayers(NPC player);
     
 }

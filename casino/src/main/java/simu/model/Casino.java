@@ -63,10 +63,11 @@ public class Casino {
             totalLoaned += casinoLoanedChange.removeFirst();
         }
     }
-
-    public void addPlayer(NPC player){
+    public NPC addPlayer(NPC player){
+        addRevenueChange(player.getMoney());
         players.add(player);
         totalPlayers++;
+        return player;
     }
 
     public void addGame(GameAbstract game){
@@ -74,6 +75,8 @@ public class Casino {
     }
 
     public void removePlayer(NPC player){
+        addRevenueChange(-1 * player.getChipsToMoney());
+        //player.setRemovalTime(time);
         players.remove(player);
     }
 
@@ -82,8 +85,19 @@ public class Casino {
     }
 
     public void updateGameTimes(int change){
-        for (int i = 0; i < games.size(); i++){
-            games.get(i).updateCurrentGameTime(change);
+        for (GameAbstract game : games){
+            game.updateCurrentGameTime(change);
+            if (game.getCurrentGameTime() <= 0) {
+                game.stopGame();
+            }
+        }
+    }
+
+    public void startGames(){
+        for (GameAbstract game : games) {
+            if (!game.isGameInProgress()) {
+                game.startGame();
+            }
         }
     }
 
@@ -105,5 +119,35 @@ public class Casino {
             }
         }
         return gamesByType;
+    }
+
+    public void handleFreePlayers(){
+        ArrayList<NPC> freePlayers = new ArrayList<>();
+        for (NPC player : players) {
+            if (!player.IsInGame()) {
+                freePlayers.add(player);
+            }
+        }
+        for (NPC player : freePlayers) {
+            ArrayList<GameAbstract> availableGames = new ArrayList<>();
+            for (GameAbstract game : games){
+                if (game.getPlayerQueueSize() < game.getMaxPlayers() && game.getMinBet() < player.getChips()) {
+                    availableGames.add(game);
+                }
+            }
+            
+            for (GameAbstract game : availableGames) {
+                if (game.getType() == player.getGamePreference() && !player.IsInGame()) {
+                    game.addPlayerToQueue(player);
+                    player.toggleInGame();
+                }
+            }
+            if (!player.IsInGame() && availableGames.size() > 0) {
+                availableGames.get(0).addPlayerToQueue(player);
+                player.toggleInGame();
+            } else if (!player.IsInGame()) {
+                removePlayer(player);
+            }
+        }
     }
 }
