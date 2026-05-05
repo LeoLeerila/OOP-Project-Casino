@@ -96,6 +96,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
 
         GameAbstract blackjack = new Blackjack(4, 10, 1.5, 0.3, 10);
         casino.addGame(blackjack);
+        casino.addGame(blackjack);
+        displayGameTable();
         displayStatistics();
         StartBtn.setOnAction(e -> startSimulation());
         PauseBtn.setOnAction(e -> pauseSimulation());
@@ -106,8 +108,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             if (newPane == null) {
                 return;
             }
-
-            displayGameTableDetails(newPane);
+            GameAbstract selectedGame = (GameAbstract) newPane.getUserData();
+            displayGameTableDetails(selectedGame);
         });
         //Set up event handlers for buttons
         /*
@@ -133,20 +135,49 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     }
 
     public void displayGameTable(){
+        GameTableAccordion.getPanes().clear();
+
+        for (GameAbstract game : casino.getGames()) {
+            TitledPane pane = new TitledPane();
+
+            pane.setText(game.getType());
+            pane.setUserData(game);
+
+            GameTableAccordion.getPanes().add(pane);
+        }
         //Get simu.model.game tables (loop, or just manually add all GameAbstract stuff) ->
             //New Vbox/hbox -> Style new container
             //Add some simu.model.game table info to vbox/hbox
             //GameTableContainer.getChildren().add(newContainer);
     }
     //trigger based
-    public void displayGameTableDetails(TitledPane selectedPane){
+    public void displayGameTableDetails(GameAbstract game){
         GameTableDetailContainer.getChildren().clear();
 
-        Label title = new Label("Selected table: " + selectedPane.getText());
-        Label status = new Label("Status: open");
-        Label players = new Label("Players: 0");
+        Label title = new Label("Selected table: " + game.getType());
+        Label status = new Label("Status: " + (game.isGameInProgress() ? "in progress" : "open"));
+        Label players = new Label("Players: " + game.getCurrentPlayerNum() + " / " + game.getMaxPlayers());
+        Label queue = new Label("Queue: " + game.getPlayerQueueSize());
+        Label totalPlayers = new Label("Total players: " + game.getTotalPlayers());
+        Label minBet = new Label("Minimum bet: " + game.getMinBet() + "€");
+        Label cashOut = new Label("Cash-out multiplier: " + game.getCashOut());
+        Label winChance = new Label("Win chance: " + game.getWinChance());
+        Label gameTime = new Label("Game time: " + game.getGameTime());
+        Label currentTime = new Label("Current game time: " + game.getCurrentGameTime());
 
-        GameTableDetailContainer.getChildren().addAll(title, status, players);
+
+        GameTableDetailContainer.getChildren().addAll(
+                title,
+                status,
+                players,
+                queue,
+                totalPlayers,
+                minBet,
+                cashOut,
+                winChance,
+                gameTime,
+                currentTime
+        );
         //GameTableDetailContainer.getChildren().clear();
         //Get clicked simu.model.game table (ex. clickedBlackjack) -> find match (loop?) ->
             //New Vbox/hbox -> Style new container
