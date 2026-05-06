@@ -115,8 +115,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     @FXML
     public void initialize() {
         //Initialize simu.model.casino and other necessary variables
-        GameAbstract poker = new Poker(5, 40, 20, 0.5, 20);
-        GameAbstract blackjack = new Blackjack(4, 10, 1.5, 0.3, 10);
+        GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
+        GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
         casino.addGame(blackjack);
         casino.addGame(poker);
         displayStatistics();
