@@ -6,6 +6,8 @@ import simu.model.MyEngine;
 import simu.model.NPC;
 import simu.model.game.GameAbstract;
 import simu.model.game.Blackjack;
+import simu.model.Save;
+import simu.framework.Clock;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -65,6 +67,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         casino.calculateRevenueChange();
         casino.calculateLoanedChange();
         logEvent("Revee: "+casino.getTotalRevenue());
+
+        //Save statistics
+        Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
 
     }
     @FXML
@@ -126,6 +131,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         //Set up event handlers for buttons
 
         AddPlayerBtn.setOnAction(e -> casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames())));
+
+        //initialize statistics save file
+        Save.initialSaveSimulation();
 
     }
 
