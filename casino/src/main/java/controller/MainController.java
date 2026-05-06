@@ -1,5 +1,7 @@
 package controller;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
 import simu.framework.Clock;
 import simu.framework.IEngine;
 import simu.framework.SimuUpdateEvent;
@@ -10,10 +12,6 @@ import simu.model.game.GameAbstract;
 import simu.model.game.Blackjack;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 import simu.model.game.Poker;
 import view.ISimulatorUI;
@@ -138,6 +136,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         casino.addGame(blackjack);
         casino.addGame(poker);
         displayStatistics();
+        displayGameTable();
         StartBtn.setOnAction(e -> startSimulation());
         PauseBtn.setOnAction(e -> pauseSimulation());
         ResetBtn.setOnAction(e -> resetSimulation());
@@ -182,6 +181,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                             break;
                         case STATISTICS_UPDATE:
                             displayStatistics();
+                            updateGameTable();
                             break;
                         case TIME_ADVANCED:
                             break;
@@ -225,11 +225,45 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     }
 
     public void displayGameTable(){
-        //Get simu.model.game tables (loop, or just manually add all GameAbstract stuff) ->
-            //New Vbox/hbox -> Style new container
-            //Add some simu.model.game table info to vbox/hbox
-            //GameTableContainer.getChildren().add(newContainer);
+        Accordion accordion = (Accordion) GameTableContainer.getChildren().get(0);
+        accordion.getPanes().clear();
+
+        for(GameAbstract game : casino.getGames()) {
+            TitledPane pane = new TitledPane();
+            pane.setText(game.getType());
+            pane.setAnimated(false);
+            VBox content = new VBox();
+            content.setSpacing(5);
+            content.setPadding(new Insets(5));
+            content.getChildren().addAll(
+                    new Label("Max: " + game.getMaxPlayers()),
+                    new Label("Min bet: " + game.getMinBet()),
+                    new Label("Win chance: " + game.getWinChance()),
+                    new Label("Active: " + game.getCurrentPlayerNum())
+            );
+            pane.setContent(content);
+            accordion.getPanes().add(pane);
+        }
     }
+    //literally just for that fucking switch case
+    public void updateGameTable(){
+        Accordion accordion = (Accordion) GameTableContainer.getChildren().get(0);
+        for(TitledPane pane : accordion.getPanes()) {
+            String gameType = pane.getText();
+            for (GameAbstract game : casino.getGames()){
+                if (game.getType().equals(gameType)){
+                    VBox content = (VBox) pane.getContent();
+                    ((Label) content.getChildren().get(0)).setText("Max: " + game.getMaxPlayers());
+                    ((Label) content.getChildren().get(1)).setText("Min bet: " + game.getMinBet());
+                    ((Label) content.getChildren().get(2)).setText("Win chance: " + game.getWinChance());
+                    ((Label) content.getChildren().get(3)).setText("Active: " + game.getCurrentPlayerNum());
+                }
+            }
+        }
+    }
+    //exists in case we add a way for user to add their own gametable (therefore it needs it's own display method)
+    public void displayGameTable(String type, int maxplayer, int minbet, int cashout, double winchance, int gametime){}
+
     //trigger based
     public void displayGameTableDetails(){
         //GameTableDetailContainer.getChildren().clear();
