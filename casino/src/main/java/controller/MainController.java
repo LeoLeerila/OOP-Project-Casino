@@ -1,5 +1,6 @@
 package controller;
 import javafx.application.Platform;
+import javafx.scene.control.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import simu.framework.Clock;
@@ -12,6 +13,10 @@ import simu.model.game.GameAbstract;
 import simu.model.game.Blackjack;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 import simu.model.game.Poker;
 import view.ISimulatorUI;
@@ -127,6 +132,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     private VBox StatisticsContainer;
     @FXML
     private TextArea EventlogContainer;
+    @FXML
+    private Accordion GameTableAccordion;
 
     @FXML
     public void initialize() {
@@ -141,6 +148,15 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         PauseBtn.setOnAction(e -> pauseSimulation());
         ResetBtn.setOnAction(e -> resetSimulation());
         AddPlayerBtn.setOnAction(e -> casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames())));
+        GameTableAccordion.expandedPaneProperty().addListener((obs, oldPane, newPane) -> {
+            GameTableDetailContainer.getChildren().clear();
+
+            if (newPane == null) {
+                return;
+            }
+            GameAbstract selectedGame = (GameAbstract) newPane.getUserData();
+            displayGameTableDetails(selectedGame);
+        });
 
         SimuSpeed.valueProperty().addListener((observable, old, newVal) -> {
             adjustSpeed(newVal.doubleValue());
@@ -265,7 +281,33 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     public void displayGameTable(String type, int maxplayer, int minbet, int cashout, double winchance, int gametime){}
 
     //trigger based
-    public void displayGameTableDetails(){
+    public void displayGameTableDetails(GameAbstract game){
+        GameTableDetailContainer.getChildren().clear();
+
+        Label title = new Label("Selected table: " + game.getType());
+        Label status = new Label("Status: " + (game.isGameInProgress() ? "in progress" : "open"));
+        Label players = new Label("Players: " + game.getCurrentPlayerNum() + " / " + game.getMaxPlayers());
+        Label queue = new Label("Queue: " + game.getPlayerQueueSize());
+        Label totalPlayers = new Label("Total players: " + game.getTotalPlayers());
+        Label minBet = new Label("Minimum bet: " + game.getMinBet() + "€");
+        Label cashOut = new Label("Cash-out multiplier: " + game.getCashOut());
+        Label winChance = new Label("Win chance: " + game.getWinChance());
+        Label gameTime = new Label("Game time: " + game.getGameTime());
+        Label currentTime = new Label("Current game time: " + game.getCurrentGameTime());
+
+
+        GameTableDetailContainer.getChildren().addAll(
+                title,
+                status,
+                players,
+                queue,
+                totalPlayers,
+                minBet,
+                cashOut,
+                winChance,
+                gameTime,
+                currentTime
+        );
         //GameTableDetailContainer.getChildren().clear();
         //Get clicked simu.model.game table (ex. clickedBlackjack) -> find match (loop?) ->
             //New Vbox/hbox -> Style new container

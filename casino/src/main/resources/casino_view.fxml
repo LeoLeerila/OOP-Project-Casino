@@ -47,9 +47,9 @@
        <!--Tässä on kaksi vaihtoehtoa joita ajattelin, tuo Accordion joka on täytetty TitledPane elementeillä tai sitten ListView elementti, jonka lisäsin myös.  -->
       <VBox fx:id="GameTableContainer" prefHeight="567.0" prefWidth="150.0" style="-fx-border-color: black; -fx-border-style: hidden solid hidden solid;" BorderPane.alignment="CENTER">
          <children>
-            <Accordion>
+            <Accordion fx:id="GameTableAccordion">
               <panes>
-                <TitledPane animated="false" text="Pöytä">
+                <TitledPane fx:id="BlackjackPane" animated="false" text="Blackjack">
                   <content>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
                   </content>
