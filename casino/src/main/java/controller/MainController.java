@@ -8,6 +8,8 @@ import simu.model.MyEngine;
 import simu.model.NPC;
 import simu.model.game.GameAbstract;
 import simu.model.game.Blackjack;
+import simu.model.Save;
+import simu.framework.Clock;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -84,6 +86,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         queueUpdate(new SimuUpdateEvent(
                 SimuUpdateEvent.Type.STATISTICS_UPDATE, null
         ));
+        //Save statistics
+        Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
+
     }
     @FXML
     public Label EndingTime;
@@ -133,8 +138,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     @FXML
     public void initialize() {
         //Initialize simu.model.casino and other necessary variables
-        GameAbstract poker = new Poker(5, 40, 20, 0.5, 20);
-        GameAbstract blackjack = new Blackjack(4, 10, 1.5, 0.3, 10);
+        GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
+        GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
         casino.addGame(blackjack);
         casino.addGame(poker);
         displayStatistics();
@@ -197,6 +202,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
 
     public void queueUpdate(SimuUpdateEvent event) {
         updateQueue.offer(event);
+        //initialize statistics save file
+        Save.initialSaveSimulation();
+
     }
 
     public void pauseSimulation(){

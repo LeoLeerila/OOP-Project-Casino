@@ -164,4 +164,9 @@ public abstract class GameAbstract implements Game {
         currentPlayers.remove(player);
         currentPlayerNum--;
     }
+
+    @Override
+    public String toString(){
+        return "game: "+ type +", maxPlayers: "+ maxPlayers +", currentPlayerNum: " + currentPlayerNum + ", playerQueue size: " + playerQueue.size() +", totalPlayers: "+ totalPlayers +", cashOutMult: "+ cashOutMult +", winChance: "+ winChance + ".";
+    }
 }
