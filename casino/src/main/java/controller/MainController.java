@@ -81,7 +81,15 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         casino.handleFreePlayers();
         casino.calculateRevenueChange();
         casino.calculateLoanedChange();
-        logEvent("Revee: "+casino.getTotalRevenue());
+
+        if(!casino.getPlayersThatLeft().isEmpty()){
+            for (NPC player : casino.getPlayersThatLeft()){
+                queueUpdate(new SimuUpdateEvent(
+                        SimuUpdateEvent.Type.PLAYER_REMOVED, player
+                ));
+            }
+            casino.clearPlayersThatLeft();
+        }
 
         queueUpdate(new SimuUpdateEvent(
                 SimuUpdateEvent.Type.STATISTICS_UPDATE, null
@@ -140,7 +148,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         //Initialize simu.model.casino and other necessary variables
         GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
         GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
-        casino.addGame(blackjack);
+        casino.addGame(blackjack);casino.addGame(blackjack);casino.addGame(blackjack);
         casino.addGame(poker);
         displayStatistics();
         StartBtn.setOnAction(e -> startSimulation());
@@ -256,7 +264,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         Label totalRevenue = new Label("Total Revenue: " + casino.getTotalRevenue() + "€");
         Label totalLoaned = new Label("Total loaned: " + casino.getTotalLoaned() + "€");
         Label totalPlayers = new Label("Total players: " + casino.getTotalPlayers());
+        Label currentPlayers = new Label("Current players: " + casino.getCurrentPlayers().size());
         StatisticsContainer.getChildren().clear();
-        StatisticsContainer.getChildren().addAll(fillerText, totalRevenue, totalLoaned, totalPlayers);
+        StatisticsContainer.getChildren().addAll(fillerText, totalRevenue, totalLoaned, totalPlayers, currentPlayers);
     }
 }

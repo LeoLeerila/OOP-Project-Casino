@@ -58,6 +58,9 @@ public class NPC {
     public void addChips(int chips){
         this.chips += chips;
     }
+    public void addChipsLoaned(int chips){
+        this.chips += chips;this.casinoLoan += chips;
+    }
     public void toggleInGame(){
         isInGame = !isInGame;
     }
@@ -80,6 +83,7 @@ public class NPC {
     public boolean IsInGame(){return isInGame;}
     public double getChipsToMoney(){return chips * convesion;}
     public int getBet(){return lastBet;}
+    public double getChipsToMoneyFinal(){return money - casinoLoan;}
     public double getRemovalTime() {return removalTime;}
     public double getArrivalTime() {return arrivalTime;}
 }

@@ -35,7 +35,8 @@ public class MyEngine extends Engine {
 		double arrivalInterval = 3.0;
 		double next = arrivalInterval;
 		while(next <= simulationTime) {
-			eventList.add(new Event(EventType.NPC_ARRIVAL, next));
+			for(int i = 0; i < (Math.random()* 5); i++) //now people come in bulk (wow, that's crazy)
+				eventList.add(new Event(EventType.NPC_ARRIVAL, next));
 			next += arrivalInterval;
 		}
 		for(double t = 1; t<= simulationTime; t++){

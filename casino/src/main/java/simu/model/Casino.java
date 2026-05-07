@@ -14,6 +14,8 @@ public class Casino {
     private ArrayList<NPC> players;
     private ArrayList<GameAbstract> games;
 
+    private ArrayList<NPC> playersThatLeft; //to see what players left
+
     public Casino(){
         totalRevenue = 0.0;
         totalLoaned = 0.0;
@@ -22,6 +24,7 @@ public class Casino {
         casinoLoanedChange = new LinkedList<Double>();
         players = new ArrayList<NPC>();
         games = new ArrayList<GameAbstract>();
+        playersThatLeft = new ArrayList<NPC>();
     }
 
     public double getTotalRevenue(){
@@ -75,9 +78,19 @@ public class Casino {
     }
 
     public void removePlayer(NPC player){
-        addRevenueChange(-1 * player.getChipsToMoney());
+        addRevenueChange(-1 * player.getChipsToMoneyFinal());
         //player.setRemovalTime(time);
+        playersThatLeft.add(player);
         players.remove(player);
+
+    }
+
+    public ArrayList<NPC> getPlayersThatLeft() {
+        return playersThatLeft; // temp arraylist to return
+    }
+    public void clearPlayersThatLeft(){
+        if(!playersThatLeft.isEmpty())
+            playersThatLeft.clear(); //clear all players
     }
 
     public void removeGame(GameAbstract game){
@@ -129,25 +142,38 @@ public class Casino {
             }
         }
         for (NPC player : freePlayers) {
-            ArrayList<GameAbstract> availableGames = new ArrayList<>();
-            for (GameAbstract game : games){
-                if (game.getPlayerQueueSize() < game.getMaxPlayers() && game.getMinBet() < player.getChips()) {
-                    availableGames.add(game);
-                }
-            }
-            
-            for (GameAbstract game : availableGames) {
-                if (game.getType() == player.getGamePreference() && !player.IsInGame()) {
-                    game.addPlayerToQueue(player);
-                    player.toggleInGame();
-                }
-            }
-            if (!player.IsInGame() && availableGames.size() > 0) {
-                availableGames.get(0).addPlayerToQueue(player);
-                player.toggleInGame();
-            } else if (!player.IsInGame()) {
+            if (player.getChipsTarget() < player.getChips()){
                 removePlayer(player);
+            }else {
+                ArrayList<GameAbstract> availableGames = new ArrayList<>();
+                for (GameAbstract game : games) {
+                    if (game.getPlayerQueueSize() < game.getMaxPlayers() && (game.getMinBet() < player.getChips() || tryTakeLoan(player, (int) (Math.round(game.getMinBet() * 1.2))))) {
+                        availableGames.add(game);
+                    }
+                }
+
+                for (GameAbstract game : availableGames) {
+                    if (game.getType() == player.getGamePreference() && !player.IsInGame()) {
+                        game.addPlayerToQueue(player);
+                        player.toggleInGame();
+                    }
+                }
+                if (!player.IsInGame() && availableGames.size() > 0) {
+                    availableGames.get(0).addPlayerToQueue(player);
+                    player.toggleInGame();
+                } else if (!player.IsInGame()) {
+                    removePlayer(player);
+                }
             }
+        }
+    }
+    public Boolean tryTakeLoan(NPC player, int amount){
+        if(Math.random() > player.getCasinoLoanWill()){
+            player.addChipsLoaned(amount);
+            addLoanedChange(player.getChipsToMoney());
+            return true;
+        }else{
+            return false;
         }
     }
 }
