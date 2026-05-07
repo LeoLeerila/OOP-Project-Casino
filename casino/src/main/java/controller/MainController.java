@@ -21,7 +21,10 @@ import simu.model.game.Poker;
 import view.ISimulatorUI;
 
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import javafx.animation.AnimationTimer;
 
 public class MainController implements IControllerVtoM, IControllerMtoV {
@@ -38,6 +41,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     private ISimulatorUI ui;
     private Thread simulationThread;
     private boolean isSimulationPaused = false;
+    private Thread casinoThread;
 
     //THREAD SAFE QUEUES FOR UPDATES
     private final ConcurrentLinkedQueue<SimuUpdateEvent> updateQueue = new ConcurrentLinkedQueue<>();
@@ -68,34 +72,35 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         EventlogContainer.clear();
         simulationThread = (Thread) engine;
         simulationThread.start();
+        casinoThread = new Thread(casino);
+        casinoThread.start();
+
     }
-    public void createPlayer(){
+    public void createPlayer(){ //this mäybe needs to be thread safe
         NPC player = casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames()));
         queueUpdate(new SimuUpdateEvent(
                 SimuUpdateEvent.Type.PLAYER_ADDED, player
         ));
     }
     public void timeAdvance(){
-        casino.startGames();
-        casino.updateGameTimes(-1 * casino.getLowestGameTime());
-        casino.handleFreePlayers();
-        casino.calculateRevenueChange();
-        casino.calculateLoanedChange();
-
-        if(!casino.getPlayersThatLeft().isEmpty()){
-            for (NPC player : casino.getPlayersThatLeft()){
+        if(casino.getIsPaused()){//move it here because why not
+            logEvent("Simulator moving forward");
+            casino.resumeCopy();
+        }
+        CopyOnWriteArrayList<NPC> PlayersThatLeft = new CopyOnWriteArrayList<NPC>(casino.getPlayersThatLeft());
+        if(!PlayersThatLeft.isEmpty()){
+            for (NPC player : PlayersThatLeft){
                 queueUpdate(new SimuUpdateEvent(
                         SimuUpdateEvent.Type.PLAYER_REMOVED, player
                 ));
             }
             casino.clearPlayersThatLeft();
+            queueUpdate(new SimuUpdateEvent(
+                    SimuUpdateEvent.Type.STATISTICS_UPDATE, null
+            ));
+            //Save statistics
+            Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
         }
-
-        queueUpdate(new SimuUpdateEvent(
-                SimuUpdateEvent.Type.STATISTICS_UPDATE, null
-        ));
-        //Save statistics
-        Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
 
     }
     @FXML
@@ -148,13 +153,13 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         //Initialize simu.model.casino and other necessary variables
         GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
         GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
-        casino.addGame(blackjack);casino.addGame(blackjack);casino.addGame(blackjack);
+        casino.addGame(blackjack);
         casino.addGame(poker);
         displayStatistics();
         StartBtn.setOnAction(e -> startSimulation());
         PauseBtn.setOnAction(e -> pauseSimulation());
         ResetBtn.setOnAction(e -> resetSimulation());
-        AddPlayerBtn.setOnAction(e -> casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames())));
+        AddPlayerBtn.setOnAction(e -> createPlayer());
 
         SimuSpeed.valueProperty().addListener((observable, old, newVal) -> {
             adjustSpeed(newVal.doubleValue());

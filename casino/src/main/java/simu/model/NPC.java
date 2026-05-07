@@ -4,6 +4,7 @@ import simu.framework.Clock;
 import simu.model.game.GameAbstract;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class NPC {
     private static int _id;
@@ -24,7 +25,7 @@ public class NPC {
     private boolean isInGame;
     private int lastBet;
 
-    public NPC(int minMoney,int maxMoney, int moneyChange, ArrayList<GameAbstract> gameList){
+    public NPC(int minMoney,int maxMoney, int moneyChange, List<GameAbstract> gameList){
         this.convesion = moneyChange;
         this.money = (int) Math.round(Math.random() * (maxMoney-minMoney+1)) + minMoney;
         this.chips = (int) Math.round(this.money / convesion);

@@ -1,20 +1,28 @@
 package simu.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 import simu.model.game.GameAbstract;
 
-public class Casino {
+public class Casino extends Thread {
     private double totalRevenue;
     private LinkedList<Double> casinoRevenueChange;
     private double totalLoaned;
     private LinkedList<Double> casinoLoanedChange;
     private int totalPlayers;
-    private ArrayList<NPC> players;
-    private ArrayList<GameAbstract> games;
+    //private ArrayList<NPC> players;
+    private List<NPC> players;
+    private List<GameAbstract> games;
 
-    private ArrayList<NPC> playersThatLeft; //to see what players left
+    private List<NPC> playersThatLeft; //to see what players left
+
+    //this is for the thing to make this into a thread
+    private volatile boolean running = true;
+    private volatile boolean paused = false;
+    private final Object pauseLock = new Object();
 
     public Casino(){
         totalRevenue = 0.0;
@@ -22,9 +30,9 @@ public class Casino {
         totalPlayers = 0;
         casinoRevenueChange = new LinkedList<Double>();
         casinoLoanedChange = new LinkedList<Double>();
-        players = new ArrayList<NPC>();
-        games = new ArrayList<GameAbstract>();
-        playersThatLeft = new ArrayList<NPC>();
+        players = Collections.synchronizedList(new ArrayList<NPC>());
+        games = Collections.synchronizedList(new ArrayList<GameAbstract>());;
+        playersThatLeft = Collections.synchronizedList(new ArrayList<NPC>());
     }
 
     public double getTotalRevenue(){
@@ -39,11 +47,11 @@ public class Casino {
         return totalPlayers;
     }
 
-    public ArrayList<NPC> getCurrentPlayers(){
+    public synchronized List<NPC> getCurrentPlayers(){
         return players;
     }
 
-    public ArrayList<GameAbstract> getGames(){
+    public List<GameAbstract> getGames(){
         return games;
     }
 
@@ -66,7 +74,7 @@ public class Casino {
             totalLoaned += casinoLoanedChange.removeFirst();
         }
     }
-    public NPC addPlayer(NPC player){
+    public synchronized NPC addPlayer(NPC player){
         addRevenueChange(player.getMoney());
         players.add(player);
         totalPlayers++;
@@ -85,10 +93,10 @@ public class Casino {
 
     }
 
-    public ArrayList<NPC> getPlayersThatLeft() {
+    public synchronized List<NPC> getPlayersThatLeft() {
         return playersThatLeft; // temp arraylist to return
     }
-    public void clearPlayersThatLeft(){
+    public synchronized void clearPlayersThatLeft(){
         if(!playersThatLeft.isEmpty())
             playersThatLeft.clear(); //clear all players
     }
@@ -176,4 +184,47 @@ public class Casino {
             return false;
         }
     }
+
+
+    @Override
+    public void run() {//one big pain in the ass
+        while (running) {
+            synchronized (pauseLock) {
+                if (!running) {
+                    break;
+                }
+                if (paused) {
+                    try {
+                        pauseLock.wait();
+                    } catch (InterruptedException e) {
+                        System.err.println(e);
+                        break;
+                    }
+                    if (!running) {
+                        break;
+                    }
+                }
+            }
+            handleFreePlayers();
+            startGames();
+            calculateRevenueChange();
+            calculateLoanedChange();
+            updateGameTimes(-1*getLowestGameTime());
+            pause();
+        }
+    }
+    public void stopCopy() {
+        running = false;
+        resumeCopy();
+    }
+    public void pause() {
+        paused = true;
+    }
+    public void resumeCopy() {
+        synchronized (pauseLock) {
+            paused = false;
+            pauseLock.notifyAll();
+        }
+    }
+    public boolean getIsPaused(){return paused;};
 }
