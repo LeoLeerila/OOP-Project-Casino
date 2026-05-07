@@ -4,6 +4,7 @@ import simu.framework.Clock;
 import simu.model.game.GameAbstract;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class NPC {
     private static int _id;
@@ -24,7 +25,7 @@ public class NPC {
     private boolean isInGame;
     private int lastBet;
 
-    public NPC(int minMoney,int maxMoney, int moneyChange, ArrayList<GameAbstract> gameList){
+    public NPC(int minMoney,int maxMoney, int moneyChange, List<GameAbstract> gameList){
         this.convesion = moneyChange;
         this.money = (int) Math.round(Math.random() * (maxMoney-minMoney+1)) + minMoney;
         this.chips = (int) Math.round(this.money / convesion);
@@ -58,6 +59,9 @@ public class NPC {
     public void addChips(int chips){
         this.chips += chips;
     }
+    public void addChipsLoaned(int chips){
+        this.chips += chips;this.casinoLoan += chips;
+    }
     public void toggleInGame(){
         isInGame = !isInGame;
     }
@@ -65,7 +69,7 @@ public class NPC {
     public void setRemovalTime(double removalTime) {this.removalTime = removalTime;}
     @Override
     public String toString(){
-        return "NPC: "+id+", Money: "+money+", Chips&Target: "+chips+"/"+chipsTarget+"("+convesion+")"+", CasinoWill: "+casinoLoanWill+"%, GamePreference: "+gamePreference;
+        return "NPC: "+id+", Money: "+money+", Chips&Target: "+chips+"/"+chipsTarget+"("+convesion+")"+", CasinoWill: "+casinoLoanWill+"%, GamePreference: "+gamePreference + ".";
     }
     //get wall
     public int getCasinoLoan() {return casinoLoan;}
@@ -80,6 +84,7 @@ public class NPC {
     public boolean IsInGame(){return isInGame;}
     public double getChipsToMoney(){return chips * convesion;}
     public int getBet(){return lastBet;}
+    public double getChipsToMoneyFinal(){return money - casinoLoan;}
     public double getRemovalTime() {return removalTime;}
     public double getArrivalTime() {return arrivalTime;}
 }

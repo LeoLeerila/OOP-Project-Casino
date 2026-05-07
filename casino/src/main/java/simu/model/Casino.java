@@ -1,18 +1,28 @@
 package simu.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 import simu.model.game.GameAbstract;
 
-public class Casino {
+public class Casino extends Thread {
     private double totalRevenue;
     private LinkedList<Double> casinoRevenueChange;
     private double totalLoaned;
     private LinkedList<Double> casinoLoanedChange;
     private int totalPlayers;
-    private ArrayList<NPC> players;
-    private ArrayList<GameAbstract> games;
+    //private ArrayList<NPC> players;
+    private List<NPC> players;
+    private List<GameAbstract> games;
+
+    private List<NPC> playersThatLeft; //to see what players left
+
+    //this is for the thing to make this into a thread
+    private volatile boolean running = true;
+    private volatile boolean paused = false;
+    private final Object pauseLock = new Object();
 
     public Casino(){
         totalRevenue = 0.0;
@@ -20,8 +30,9 @@ public class Casino {
         totalPlayers = 0;
         casinoRevenueChange = new LinkedList<Double>();
         casinoLoanedChange = new LinkedList<Double>();
-        players = new ArrayList<NPC>();
-        games = new ArrayList<GameAbstract>();
+        players = Collections.synchronizedList(new ArrayList<NPC>());
+        games = Collections.synchronizedList(new ArrayList<GameAbstract>());;
+        playersThatLeft = Collections.synchronizedList(new ArrayList<NPC>());
     }
 
     public double getTotalRevenue(){
@@ -36,11 +47,11 @@ public class Casino {
         return totalPlayers;
     }
 
-    public ArrayList<NPC> getCurrentPlayers(){
+    public synchronized List<NPC> getCurrentPlayers(){
         return players;
     }
 
-    public ArrayList<GameAbstract> getGames(){
+    public List<GameAbstract> getGames(){
         return games;
     }
 
@@ -63,7 +74,7 @@ public class Casino {
             totalLoaned += casinoLoanedChange.removeFirst();
         }
     }
-    public NPC addPlayer(NPC player){
+    public synchronized NPC addPlayer(NPC player){
         addRevenueChange(player.getMoney());
         players.add(player);
         totalPlayers++;
@@ -75,9 +86,19 @@ public class Casino {
     }
 
     public void removePlayer(NPC player){
-        addRevenueChange(-1 * player.getChipsToMoney());
+        addRevenueChange(-1 * player.getChipsToMoneyFinal());
         //player.setRemovalTime(time);
+        playersThatLeft.add(player);
         players.remove(player);
+
+    }
+
+    public synchronized List<NPC> getPlayersThatLeft() {
+        return playersThatLeft; // temp arraylist to return
+    }
+    public synchronized void clearPlayersThatLeft(){
+        if(!playersThatLeft.isEmpty())
+            playersThatLeft.clear(); //clear all players
     }
 
     public void removeGame(GameAbstract game){
@@ -129,25 +150,81 @@ public class Casino {
             }
         }
         for (NPC player : freePlayers) {
-            ArrayList<GameAbstract> availableGames = new ArrayList<>();
-            for (GameAbstract game : games){
-                if (game.getPlayerQueueSize() < game.getMaxPlayers() && game.getMinBet() < player.getChips()) {
-                    availableGames.add(game);
-                }
-            }
-            
-            for (GameAbstract game : availableGames) {
-                if (game.getType() == player.getGamePreference() && !player.IsInGame()) {
-                    game.addPlayerToQueue(player);
-                    player.toggleInGame();
-                }
-            }
-            if (!player.IsInGame() && availableGames.size() > 0) {
-                availableGames.get(0).addPlayerToQueue(player);
-                player.toggleInGame();
-            } else if (!player.IsInGame()) {
+            if (player.getChipsTarget() < player.getChips()){
                 removePlayer(player);
+            }else {
+                ArrayList<GameAbstract> availableGames = new ArrayList<>();
+                for (GameAbstract game : games) {
+                    if (game.getPlayerQueueSize() < game.getMaxPlayers() && (game.getMinBet() < player.getChips() || tryTakeLoan(player, (int) (Math.round(game.getMinBet() * 1.2))))) {
+                        availableGames.add(game);
+                    }
+                }
+
+                for (GameAbstract game : availableGames) {
+                    if (game.getType() == player.getGamePreference() && !player.IsInGame()) {
+                        game.addPlayerToQueue(player);
+                        player.toggleInGame();
+                    }
+                }
+                if (!player.IsInGame() && availableGames.size() > 0) {
+                    availableGames.get(0).addPlayerToQueue(player);
+                    player.toggleInGame();
+                } else if (!player.IsInGame()) {
+                    removePlayer(player);
+                }
             }
         }
     }
+    public Boolean tryTakeLoan(NPC player, int amount){
+        if(Math.random() > player.getCasinoLoanWill()){
+            player.addChipsLoaned(amount);
+            addLoanedChange(player.getChipsToMoney());
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
+    @Override
+    public void run() {//one big pain in the ass
+        while (running) {
+            synchronized (pauseLock) {
+                if (!running) {
+                    break;
+                }
+                if (paused) {
+                    try {
+                        pauseLock.wait();
+                    } catch (InterruptedException e) {
+                        System.err.println(e);
+                        break;
+                    }
+                    if (!running) {
+                        break;
+                    }
+                }
+            }
+            handleFreePlayers();
+            startGames();
+            calculateRevenueChange();
+            calculateLoanedChange();
+            updateGameTimes(-1*getLowestGameTime());
+            pause();
+        }
+    }
+    public void stopCopy() {
+        running = false;
+        resumeCopy();
+    }
+    public void pause() {
+        paused = true;
+    }
+    public void resumeCopy() {
+        synchronized (pauseLock) {
+            paused = false;
+            pauseLock.notifyAll();
+        }
+    }
+    public boolean getIsPaused(){return paused;};
 }
