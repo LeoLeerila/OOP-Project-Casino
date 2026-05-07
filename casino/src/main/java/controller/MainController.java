@@ -44,6 +44,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     private ISimulatorUI ui;
     private Thread simulationThread;
     private boolean isSimulationPaused = false;
+    private GameAbstract selectedGame;
 
     //THREAD SAFE QUEUES FOR UPDATES
     private final ConcurrentLinkedQueue<SimuUpdateEvent> updateQueue = new ConcurrentLinkedQueue<>();
@@ -76,6 +77,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         EventlogContainer.clear();
         simulationThread = (Thread) engine;
         simulationThread.start();
+
+        if (selectedGame != null) {
+            displayGameTableDetails(selectedGame);
+        }
     }
 
     public void createPlayer() {
@@ -168,7 +173,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             if (newPane == null) {
                 return;
             }
-            GameAbstract selectedGame = (GameAbstract) newPane.getUserData();
+            selectedGame = (GameAbstract) newPane.getUserData();
             displayGameTableDetails(selectedGame);
         });
 
@@ -233,6 +238,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         isSimulationPaused = !isSimulationPaused;
         if (engine != null) {
             engine.setPaused(isSimulationPaused);
+        }
+        if (selectedGame != null) {
+            displayGameTableDetails(selectedGame);
         }
     }
 
@@ -299,16 +307,41 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     public void displayGameTable(String type, int maxplayer, int minbet, int cashout, double winchance, int gametime) {
     }
 
+    private boolean canEditTables() {
+        return simulationThread == null
+                || !simulationThread.isAlive()
+                || isSimulationPaused;
+    }
+
     private HBox createEditRow(String labelText, String currentValue, Consumer<String> onApply) {
         HBox row = new HBox(8);
 
         Label label = new Label(labelText);
         TextField field = new TextField(currentValue);
         Button button = new Button("Apply");
+        Label errorLabel = new Label();
 
-        button.setOnAction(e -> onApply.accept(field.getText()));
+        boolean editable = canEditTables();
+        field.setDisable(!editable);
+        button.setDisable(!editable);
 
-        row.getChildren().addAll(label, field, button);
+        button.setOnAction(e -> {
+            errorLabel.setText("");
+
+            if (!canEditTables()) {
+                return;
+            }
+
+            try {
+                onApply.accept(field.getText());
+            } catch (NumberFormatException ex) {
+                errorLabel.setText("Enter a valid number.");
+            } catch (IllegalArgumentException ex) {
+                errorLabel.setText(ex.getMessage());
+            }
+        });
+
+        row.getChildren().addAll(label, field, button, errorLabel);
         return row;
     }
 
@@ -332,6 +365,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 String.valueOf(game.getMinBet()),
                 text -> {
                     int value = Integer.parseInt(text);
+                    if (value <= 0) {
+                        throw new IllegalArgumentException("Minimum bet must be greater than 0.");
+                    }
                     game.setMinBet(value);
                     displayGameTableDetails(game);
                     updateGameTable();
@@ -342,7 +378,11 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 "Cash-out multiplier:",
                 String.valueOf(game.getCashOut()),
                 text -> {
-                    int value = Integer.parseInt(text);
+                    double value = Double.parseDouble(text);
+
+                    if (value <= 0) {
+                        throw new IllegalArgumentException("Cash-out must be greater than 0.");
+                    }
                     game.setCashOut(value);
                     displayGameTableDetails(game);
                     updateGameTable();
@@ -354,6 +394,11 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 String.valueOf(game.getWinChance()),
                 text -> {
                     double value = Double.parseDouble(text);
+
+                    if (value < 0 || value > 1) {
+                        throw new IllegalArgumentException("Must be between 0 and 1");
+                    }
+
                     game.setWinChance(value);
                     displayGameTableDetails(game);
                     updateGameTable();
