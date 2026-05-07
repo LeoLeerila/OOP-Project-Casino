@@ -3,6 +3,8 @@ import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.control.TextField;
 import simu.framework.Clock;
 import simu.framework.IEngine;
 import simu.framework.SimuUpdateEvent;
@@ -248,6 +250,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             TitledPane pane = new TitledPane();
             pane.setText(game.getType());
             pane.setAnimated(false);
+            pane.setUserData(game);
             VBox content = new VBox();
             content.setSpacing(5);
             content.setPadding(new Insets(5));
@@ -295,6 +298,50 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         Label gameTime = new Label("Game time: " + game.getGameTime());
         Label currentTime = new Label("Current game time: " + game.getCurrentGameTime());
 
+        HBox minBetRow = new HBox(8);
+        TextField minBetField = new TextField(String.valueOf(game.getMinBet()));
+        Button applyMinBetBtn = new Button("Apply");
+        minBetRow.getChildren().addAll(
+                new Label("Minimum bet:"),
+                minBetField,
+                applyMinBetBtn
+        );
+
+        HBox cashOutRow = new HBox(8);
+        TextField cashOutField = new TextField(String.valueOf(game.getCashOut()));
+        Button applyCashOutBtn = new Button("Apply");
+        cashOutRow.getChildren().addAll(
+                new Label("Cash-out multiplier:"),
+                cashOutField,
+                applyCashOutBtn
+        );
+
+        HBox winChanceRow = new HBox(8);
+        TextField winChanceField = new TextField(String.valueOf(game.getWinChance()));
+        Button applyWinChanceBtn = new Button("Apply");
+        winChanceRow.getChildren().addAll(
+                new Label("Win chance:"),
+                winChanceField,
+                applyWinChanceBtn
+        );
+
+        HBox gameTimeRow = new HBox(8);
+        TextField gameTimeField = new TextField(String.valueOf(game.getGameTime()));
+        Button applyGameTimeBtn = new Button("Apply");
+        gameTimeRow.getChildren().addAll(
+                new Label("Game time:"),
+                gameTimeField,
+                applyGameTimeBtn
+        );
+
+        HBox maxPlayersRow = new HBox(8);
+        TextField maxPlayersField = new TextField(String.valueOf(game.getMaxPlayers()));
+        Button applyMaxPlayersBtn = new Button("Apply");
+        maxPlayersRow.getChildren().addAll(
+                new Label("Max players:"),
+                maxPlayersField,
+                applyMaxPlayersBtn
+        );
 
         GameTableDetailContainer.getChildren().addAll(
                 title,
@@ -306,7 +353,12 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 cashOut,
                 winChance,
                 gameTime,
-                currentTime
+                currentTime,
+                minBetRow,
+                cashOutRow,
+                winChanceRow,
+                gameTimeRow,
+                maxPlayersRow
         );
         //GameTableDetailContainer.getChildren().clear();
         //Get clicked simu.model.game table (ex. clickedBlackjack) -> find match (loop?) ->
