@@ -77,7 +77,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
 
     }
     public void createPlayer(){ //this mäybe needs to be thread safe
-        NPC player = casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames()));
+        NPC player = casino.addPlayer(minNPCMoney, maxNPCMoney, ChipConvesion);
         queueUpdate(new SimuUpdateEvent(
                 SimuUpdateEvent.Type.PLAYER_ADDED, player
         ));
@@ -94,7 +94,6 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                         SimuUpdateEvent.Type.PLAYER_REMOVED, player
                 ));
             }
-            casino.clearPlayersThatLeft();
             queueUpdate(new SimuUpdateEvent(
                     SimuUpdateEvent.Type.STATISTICS_UPDATE, null
             ));
@@ -187,10 +186,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 while((event = updateQueue.poll()) != null) {
                     switch (event.getType()){
                         case PLAYER_ADDED:
-                            logEvent("Player added with " + ((NPC) event.getData()).getMoney() + "€ and a preference for "+ ((NPC) event.getData()).getGamePreference());
+                            logEvent("Player added with (id) "+((NPC) event.getData()).getId()+", "+ ((NPC) event.getData()).getMoney() + "€ and a preference for "+ ((NPC) event.getData()).getGamePreference());
                             break;
                         case PLAYER_REMOVED:
-                            logEvent("Player removed with " + ((NPC) event.getData()).getMoney() + "€");
+                            logEvent("Player removed with (id) "+((NPC) event.getData()).getId()+", " + ((NPC) event.getData()).getMoney() + "€");
                             break;
                         case GAME_STARTED:
                             logEvent("Game started: " + ((GameAbstract) event.getData()).getTotalPlayers() + " players.");

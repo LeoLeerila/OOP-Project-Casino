@@ -22,7 +22,7 @@ public class MyEngine extends Engine {
 		synchronized (pauseLock) {
 			this.isPaused = paused;
 			if (!isPaused) {
-				pauseLock.notifyAll();
+				pauseLock.notify();
 			}
 		}
 	}

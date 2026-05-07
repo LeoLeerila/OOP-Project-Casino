@@ -4,17 +4,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import simu.model.game.GameAbstract;
 
 public class Casino extends Thread {
     private double totalRevenue;
-    private LinkedList<Double> casinoRevenueChange;
+    private ConcurrentLinkedQueue<Double> casinoRevenueChange;
     private double totalLoaned;
-    private LinkedList<Double> casinoLoanedChange;
+    private ConcurrentLinkedQueue<Double> casinoLoanedChange;
     private int totalPlayers;
     //private ArrayList<NPC> players;
-    private List<NPC> players;
+    private ConcurrentLinkedQueue<NPC> players;
     private List<GameAbstract> games;
 
     private List<NPC> playersThatLeft; //to see what players left
@@ -28,9 +29,9 @@ public class Casino extends Thread {
         totalRevenue = 0.0;
         totalLoaned = 0.0;
         totalPlayers = 0;
-        casinoRevenueChange = new LinkedList<Double>();
-        casinoLoanedChange = new LinkedList<Double>();
-        players = Collections.synchronizedList(new ArrayList<NPC>());
+        casinoRevenueChange = new ConcurrentLinkedQueue<Double>();
+        casinoLoanedChange = new ConcurrentLinkedQueue<Double>();
+        players = new ConcurrentLinkedQueue<NPC>();
         games = Collections.synchronizedList(new ArrayList<GameAbstract>());;
         playersThatLeft = Collections.synchronizedList(new ArrayList<NPC>());
     }
@@ -47,7 +48,7 @@ public class Casino extends Thread {
         return totalPlayers;
     }
 
-    public synchronized List<NPC> getCurrentPlayers(){
+    public synchronized ConcurrentLinkedQueue<NPC> getCurrentPlayers(){
         return players;
     }
 
@@ -60,8 +61,13 @@ public class Casino extends Thread {
     }
 
     public void calculateRevenueChange(){
-        while (casinoRevenueChange.size() > 0) {
-            totalRevenue += casinoRevenueChange.removeFirst();
+        while (!casinoRevenueChange.isEmpty()) {
+            var value = casinoRevenueChange.poll();
+            if (value == null){
+                System.out.println("VITTU SAATANA, value tyhjä");
+            }else {
+                totalRevenue += value;
+            }
         }
     }
 
@@ -70,11 +76,17 @@ public class Casino extends Thread {
     }
 
     public void calculateLoanedChange(){
-        while (casinoLoanedChange.size() > 0) {
-            totalLoaned += casinoLoanedChange.removeFirst();
+        while (!casinoLoanedChange.isEmpty()) {
+            var value = casinoLoanedChange.poll();
+            if (value == null){
+                System.out.println("VITTU SAATANA, value tyhjä");
+            }else {
+                totalLoaned += value;
+            }
         }
     }
-    public synchronized NPC addPlayer(NPC player){
+    public synchronized NPC addPlayer(int minNPCMoney, int maxNPCMoney, int ChipConvesion){
+        NPC player = new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, getGames());
         addRevenueChange(player.getMoney());
         players.add(player);
         totalPlayers++;
@@ -105,7 +117,7 @@ public class Casino extends Thread {
         games.remove(game);
     }
 
-    public void updateGameTimes(int change){
+    public synchronized void updateGameTimes(int change){
         for (GameAbstract game : games){
             game.updateCurrentGameTime(change);
             if (game.getCurrentGameTime() <= 0) {
@@ -114,7 +126,7 @@ public class Casino extends Thread {
         }
     }
 
-    public void startGames(){
+    public synchronized void startGames(){
         for (GameAbstract game : games) {
             if (!game.isGameInProgress()) {
                 game.startGame();
@@ -143,7 +155,7 @@ public class Casino extends Thread {
     }
 
     public void handleFreePlayers(){
-        ArrayList<NPC> freePlayers = new ArrayList<>();
+        List<NPC> freePlayers = Collections.synchronizedList(new ArrayList<NPC>());
         for (NPC player : players) {
             if (!player.IsInGame()) {
                 freePlayers.add(player);
@@ -205,6 +217,7 @@ public class Casino extends Thread {
                     }
                 }
             }
+            clearPlayersThatLeft();
             handleFreePlayers();
             startGames();
             calculateRevenueChange();
@@ -223,7 +236,7 @@ public class Casino extends Thread {
     public void resumeCopy() {
         synchronized (pauseLock) {
             paused = false;
-            pauseLock.notifyAll();
+            pauseLock.notify();
         }
     }
     public boolean getIsPaused(){return paused;};

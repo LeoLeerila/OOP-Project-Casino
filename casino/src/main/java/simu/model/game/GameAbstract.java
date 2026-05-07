@@ -2,6 +2,7 @@ package simu.model.game;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import simu.model.NPC;
 
@@ -15,7 +16,7 @@ public abstract class GameAbstract implements Game {
     private int minBet;
     private double cashOutMult;
     private double winChance;
-    private LinkedList<NPC> playerQueue;
+    private ConcurrentLinkedQueue<NPC> playerQueue;
     private ArrayList<NPC> currentPlayers;
     private boolean gameInProgress;
 
@@ -28,7 +29,7 @@ public abstract class GameAbstract implements Game {
         this.winChance = winChance;
         currentPlayerNum = 0;
         totalPlayers = 0;
-        playerQueue = new LinkedList<NPC>();
+        playerQueue = new ConcurrentLinkedQueue<NPC>();
         currentPlayers = new ArrayList<NPC>(0);
         gameInProgress = false;
     }
@@ -77,7 +78,7 @@ public abstract class GameAbstract implements Game {
         return winChance;
     }
 
-    public LinkedList<NPC> getPlayerQueue(){
+    public ConcurrentLinkedQueue<NPC> getPlayerQueue(){
         return playerQueue;
     }
 
@@ -157,7 +158,7 @@ public abstract class GameAbstract implements Game {
     }
 
     public NPC removePlayerFromQueue(){
-        return playerQueue.removeFirst();
+        return playerQueue.poll();
     }
 
     public void removePlayerFromCurrentPlayers(NPC player){
