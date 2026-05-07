@@ -1,4 +1,5 @@
 package controller;
+
 import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.geometry.Insets;
@@ -25,6 +26,8 @@ import view.ISimulatorUI;
 
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
+
 import javafx.animation.AnimationTimer;
 
 public class MainController implements IControllerVtoM, IControllerMtoV {
@@ -49,8 +52,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     private AnimationTimer updateTimer;
 
 
-    public MainController(){}
-    public void setUI(ISimulatorUI ui){
+    public MainController() {
+    }
+
+    public void setUI(ISimulatorUI ui) {
         this.ui = ui;
     }
 
@@ -72,48 +77,55 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         simulationThread = (Thread) engine;
         simulationThread.start();
     }
-    public void createPlayer(){
+
+    public void createPlayer() {
         NPC player = casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames()));
         queueUpdate(new SimuUpdateEvent(
                 SimuUpdateEvent.Type.PLAYER_ADDED, player
         ));
     }
-    public void timeAdvance(){
+
+    public void timeAdvance() {
         casino.startGames();
         casino.updateGameTimes(-1 * casino.getLowestGameTime());
         casino.handleFreePlayers();
         casino.calculateRevenueChange();
         casino.calculateLoanedChange();
-        logEvent("Revee: "+casino.getTotalRevenue());
+        logEvent("Revee: " + casino.getTotalRevenue());
 
         queueUpdate(new SimuUpdateEvent(
                 SimuUpdateEvent.Type.STATISTICS_UPDATE, null
         ));
     }
+
     @FXML
     public Label EndingTime;
+
     @Override
     public void decreaseSpeed() { // hidastetaan moottorisäiettä
-        engine.setDelay((long)(engine.getDelay()*1.10));
+        engine.setDelay((long) (engine.getDelay() * 1.10));
     }
 
     @Override
     public void increaseSpeed() { // nopeutetaan moottorisäiettä
-        engine.setDelay((long)(engine.getDelay()*0.9));
+        engine.setDelay((long) (engine.getDelay() * 0.9));
     }
+
     @Override
     public void logEvent(String message) {
         Platform.runLater(() -> EventlogContainer.appendText(message + "\n"));
     }
+
     @Override
     public void showEndTime(double time) {
-        Platform.runLater(()->ui.setEndingTime(time));
+        Platform.runLater(() -> ui.setEndingTime(time));
     }
 
     @Override
     public void visualiseCustomer() {
         Platform.runLater(() -> ui.getVisualisation().newCustomer());
     }
+
     @FXML
     private Button StartBtn;
     @FXML
@@ -170,7 +182,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         startUIUpdate();
     }
 
-    private void adjustSpeed(double sliderVal){
+    private void adjustSpeed(double sliderVal) {
         if (engine != null) {
             double delayMS = 50.0 * Math.pow(2.0, (10.0 - sliderVal) / 2.0);
             long newDelay = Math.round(delayMS);
@@ -183,10 +195,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             @Override
             public void handle(long now) {
                 SimuUpdateEvent event;
-                while((event = updateQueue.poll()) != null) {
-                    switch (event.getType()){
+                while ((event = updateQueue.poll()) != null) {
+                    switch (event.getType()) {
                         case PLAYER_ADDED:
-                            logEvent("Player added with " + ((NPC) event.getData()).getMoney() + "€ and a preference for "+ ((NPC) event.getData()).getGamePreference());
+                            logEvent("Player added with " + ((NPC) event.getData()).getMoney() + "€ and a preference for " + ((NPC) event.getData()).getGamePreference());
                             break;
                         case PLAYER_REMOVED:
                             logEvent("Player removed with " + ((NPC) event.getData()).getMoney() + "€");
@@ -217,17 +229,18 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         updateQueue.offer(event);
     }
 
-    public void pauseSimulation(){
+    public void pauseSimulation() {
         isSimulationPaused = !isSimulationPaused;
-        if(engine != null) {
+        if (engine != null) {
             engine.setPaused(isSimulationPaused);
         }
     }
-    public void resetSimulation(){
-        if (updateTimer != null){
+
+    public void resetSimulation() {
+        if (updateTimer != null) {
             updateTimer.stop();
         }
-        if(engine != null) {
+        if (engine != null) {
             engine.setReset(true);
             ((Thread) engine).interrupt();
             Clock.getInstance().setTime(0);
@@ -237,16 +250,16 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             simulationThread = null;
         }
         updateQueue.clear();
-        if(updateTimer !=null){
+        if (updateTimer != null) {
             updateTimer.start();
         }
     }
 
-    public void displayGameTable(){
+    public void displayGameTable() {
         Accordion accordion = (Accordion) GameTableContainer.getChildren().get(0);
         accordion.getPanes().clear();
 
-        for(GameAbstract game : casino.getGames()) {
+        for (GameAbstract game : casino.getGames()) {
             TitledPane pane = new TitledPane();
             pane.setText(game.getType());
             pane.setAnimated(false);
@@ -264,13 +277,14 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             accordion.getPanes().add(pane);
         }
     }
+
     //literally just for that fucking switch case
-    public void updateGameTable(){
+    public void updateGameTable() {
         Accordion accordion = (Accordion) GameTableContainer.getChildren().get(0);
-        for(TitledPane pane : accordion.getPanes()) {
+        for (TitledPane pane : accordion.getPanes()) {
             String gameType = pane.getText();
-            for (GameAbstract game : casino.getGames()){
-                if (game.getType().equals(gameType)){
+            for (GameAbstract game : casino.getGames()) {
+                if (game.getType().equals(gameType)) {
                     VBox content = (VBox) pane.getContent();
                     ((Label) content.getChildren().get(0)).setText("Max: " + game.getMaxPlayers());
                     ((Label) content.getChildren().get(1)).setText("Min bet: " + game.getMinBet());
@@ -280,11 +294,26 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             }
         }
     }
+
     //exists in case we add a way for user to add their own gametable (therefore it needs it's own display method)
-    public void displayGameTable(String type, int maxplayer, int minbet, int cashout, double winchance, int gametime){}
+    public void displayGameTable(String type, int maxplayer, int minbet, int cashout, double winchance, int gametime) {
+    }
+
+    private HBox createEditRow(String labelText, String currentValue, Consumer<String> onApply) {
+        HBox row = new HBox(8);
+
+        Label label = new Label(labelText);
+        TextField field = new TextField(currentValue);
+        Button button = new Button("Apply");
+
+        button.setOnAction(e -> onApply.accept(field.getText()));
+
+        row.getChildren().addAll(label, field, button);
+        return row;
+    }
 
     //trigger based
-    public void displayGameTableDetails(GameAbstract game){
+    public void displayGameTableDetails(GameAbstract game) {
         GameTableDetailContainer.getChildren().clear();
 
         Label title = new Label("Selected table: " + game.getType());
@@ -298,49 +327,37 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         Label gameTime = new Label("Game time: " + game.getGameTime());
         Label currentTime = new Label("Current game time: " + game.getCurrentGameTime());
 
-        HBox minBetRow = new HBox(8);
-        TextField minBetField = new TextField(String.valueOf(game.getMinBet()));
-        Button applyMinBetBtn = new Button("Apply");
-        minBetRow.getChildren().addAll(
-                new Label("Minimum bet:"),
-                minBetField,
-                applyMinBetBtn
+        HBox minBetRow = createEditRow(
+                "Minimum bet:",
+                String.valueOf(game.getMinBet()),
+                text -> {
+                    int value = Integer.parseInt(text);
+                    game.setMinBet(value);
+                    displayGameTableDetails(game);
+                    updateGameTable();
+                }
         );
 
-        HBox cashOutRow = new HBox(8);
-        TextField cashOutField = new TextField(String.valueOf(game.getCashOut()));
-        Button applyCashOutBtn = new Button("Apply");
-        cashOutRow.getChildren().addAll(
-                new Label("Cash-out multiplier:"),
-                cashOutField,
-                applyCashOutBtn
+        HBox cashOutRow = createEditRow(
+                "Cash-out multiplier:",
+                String.valueOf(game.getCashOut()),
+                text -> {
+                    int value = Integer.parseInt(text);
+                    game.setCashOut(value);
+                    displayGameTableDetails(game);
+                    updateGameTable();
+                }
         );
 
-        HBox winChanceRow = new HBox(8);
-        TextField winChanceField = new TextField(String.valueOf(game.getWinChance()));
-        Button applyWinChanceBtn = new Button("Apply");
-        winChanceRow.getChildren().addAll(
-                new Label("Win chance:"),
-                winChanceField,
-                applyWinChanceBtn
-        );
-
-        HBox gameTimeRow = new HBox(8);
-        TextField gameTimeField = new TextField(String.valueOf(game.getGameTime()));
-        Button applyGameTimeBtn = new Button("Apply");
-        gameTimeRow.getChildren().addAll(
-                new Label("Game time:"),
-                gameTimeField,
-                applyGameTimeBtn
-        );
-
-        HBox maxPlayersRow = new HBox(8);
-        TextField maxPlayersField = new TextField(String.valueOf(game.getMaxPlayers()));
-        Button applyMaxPlayersBtn = new Button("Apply");
-        maxPlayersRow.getChildren().addAll(
-                new Label("Max players:"),
-                maxPlayersField,
-                applyMaxPlayersBtn
+        HBox winChanceRow = createEditRow(
+                "Win chance:",
+                String.valueOf(game.getWinChance()),
+                text -> {
+                    double value = Double.parseDouble(text);
+                    game.setWinChance(value);
+                    displayGameTableDetails(game);
+                    updateGameTable();
+                }
         );
 
         GameTableDetailContainer.getChildren().addAll(
@@ -356,22 +373,21 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 currentTime,
                 minBetRow,
                 cashOutRow,
-                winChanceRow,
-                gameTimeRow,
-                maxPlayersRow
+                winChanceRow
+
         );
         //GameTableDetailContainer.getChildren().clear();
         //Get clicked simu.model.game table (ex. clickedBlackjack) -> find match (loop?) ->
-            //New Vbox/hbox -> Style new container
-            //Add all simu.model.game table info to vbox/hbox
-            //Add content manipulation buttons
-            //   (Ex.) Button winChanceBtn = new Button();
-            //      -> winChanceBtn.setOnAction(e -> clickedBlackjack.setWinChance(valueFromAField));
-            //   (...And remaining buttons)
-            //GameTableContainer.getChildren().add(newContainer);
+        //New Vbox/hbox -> Style new container
+        //Add all simu.model.game table info to vbox/hbox
+        //Add content manipulation buttons
+        //   (Ex.) Button winChanceBtn = new Button();
+        //      -> winChanceBtn.setOnAction(e -> clickedBlackjack.setWinChance(valueFromAField));
+        //   (...And remaining buttons)
+        //GameTableContainer.getChildren().add(newContainer);
     }
 
-    public void displayStatistics(){
+    public void displayStatistics() {
         Label fillerText = new Label("Statistics and relevant data: ");
         Label totalRevenue = new Label("Total Revenue: " + casino.getTotalRevenue() + "€");
         Label totalLoaned = new Label("Total loaned: " + casino.getTotalLoaned() + "€");
