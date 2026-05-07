@@ -20,7 +20,11 @@ public class Save {
                 return;
             }
         }
-        public static void saveSimulation(double time, double revenue, double loans, int NPCNum, ArrayList<NPC> NPCs, int gameNum, ArrayList<GameAbstract> games){
+        public static void saveSimulation(double time, double revenue, double loans, int NPCNum, ArrayList<NPC> NPCList, int gameNum, ArrayList<GameAbstract> gameList){
+            ArrayList<NPC> NPCs = new ArrayList<>();
+            NPCs.addAll(NPCList);
+            ArrayList<GameAbstract> games = new ArrayList<>();
+            games.addAll(gameList);
             String NPCString = "";
             String gameString = "";
 
