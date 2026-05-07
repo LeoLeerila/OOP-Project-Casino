@@ -164,6 +164,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         //default
         SimuSpeed.setValue(5.0);
         startUIUpdate();
+
+        //initialize statistics save file
+        Save.initialSaveSimulation();
     }
 
     private void adjustSpeed(double sliderVal){
@@ -210,9 +213,6 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
 
     public void queueUpdate(SimuUpdateEvent event) {
         updateQueue.offer(event);
-        //initialize statistics save file
-        Save.initialSaveSimulation();
-
     }
 
     public void pauseSimulation(){
