@@ -1,7 +1,13 @@
 package simu.framework;
-
+/**
+ * This is a class that enables communication between Engine and Controller, while being
+ * a separated class from IControllerMtoV and so on to ensure thread safety.
+ * */
 //For updating the UI visuals (mainly to stay thread safe and have one class handle changes)
 public class SimuUpdateEvent implements ISimuUpdate {
+    /**
+     * ENUM types to define the type of data being handed over.
+     * */
     public enum Type {
         PLAYER_ADDED,
         PLAYER_REMOVED,

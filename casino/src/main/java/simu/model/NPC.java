@@ -47,6 +47,10 @@ public class NPC {
         }
         this.totalGamesPlayed++;
     }
+    /**
+     * Sets the bet for the NPC based on a random value between the minimum bet and the chips target.
+     * @param minBet (int)
+     * */
     public void setBet(int minBet){
         int fish = (int) Math.round(minBet+(Math.random()*(chipsTarget)));
         if (fish > chips){ //heh
@@ -72,6 +76,10 @@ public class NPC {
         return "NPC: "+id+", Money: "+money+", Chips&Target: "+chips+"/"+chipsTarget+"("+convesion+")"+", CasinoWill: "+casinoLoanWill+"%, GamePreference: "+gamePreference + ".";
     }
     //get wall
+    /**
+     * Getters for the NPC class, used to access the private variables of the class. These are used in the controller and view to
+     * display the NPC's information and to make decisions based on the NPC's state.
+     * */
     public int getCasinoLoan() {return casinoLoan;}
     public double getCasinoLoanWill() {return casinoLoanWill;}
     public int getDifferentGamesPlayed() {return differentGamesPlayed;}

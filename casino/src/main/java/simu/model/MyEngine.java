@@ -4,7 +4,7 @@ import controller.IControllerMtoV;
 import eduni.distributions.Negexp;
 import eduni.distributions.Normal;
 import simu.framework.*;
-
+import simu.model.game.GameAbstract;
 
 public class MyEngine extends Engine {
 	private ArrivalProcess arrivalProcess;
@@ -13,10 +13,14 @@ public class MyEngine extends Engine {
 	public MyEngine(IControllerMtoV controller){ //Apua
 		super(controller);
 		Trace.setTraceLevel(Trace.Level.INFO);
-		//Kun aletaan lisäämään pelipöytiä jotka toimis SP:nä, ServicePoint.java vois muuttua interfaceks
-		//-jonka gameAbstract implementoi. Sillee ei ehkä tarttis säätää uudelleen kirjoittamisen kans
 		servicePoints = new ServicePoint[0];
+
+		//servicePoints = new GameAbstract[0]; for all games so each are their own thread
+
 	}
+	/**
+	 * setPaused() and setReset() are methods that allow the controller to manage the simulation's state.
+	 * */
 	@Override
 	public void setPaused(boolean paused){
 		synchronized (pauseLock) {
@@ -30,6 +34,9 @@ public class MyEngine extends Engine {
 	public void setReset(boolean reset){
 		this.isReset = reset;
 	}
+	/**
+	 * Handles the bulk spawn of NPC's
+	 * */
 	@Override
 	protected void initialization() {
 		double arrivalInterval = 3.0;
@@ -44,6 +51,9 @@ public class MyEngine extends Engine {
 		}
 	}
 	//overwrite Engine.java run method to be able to pause and reset simu (was not fun)
+	/**
+	 * run() method takes care of simulation running, and managing states like pause and reset.
+	 * */
 	@Override
 	public void run() {
 		initialization();

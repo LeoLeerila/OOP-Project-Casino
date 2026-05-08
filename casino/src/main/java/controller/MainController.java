@@ -12,8 +12,7 @@ import simu.framework.SimuUpdateEvent;
 import simu.model.Casino;
 import simu.model.MyEngine;
 import simu.model.NPC;
-import simu.model.game.GameAbstract;
-import simu.model.game.Blackjack;
+import simu.model.game.*;
 import simu.model.Save;
 import simu.framework.Clock;
 
@@ -23,7 +22,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
-import simu.model.game.Poker;
 import view.ISimulatorUI;
 
 
@@ -32,15 +30,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javafx.animation.AnimationTimer;
+/**
+ * MainController class is the main logic handler and caller of the program.
+ * */
 
 public class MainController implements IControllerVtoM, IControllerMtoV {
     //Huom: kuvakaappauksen perusteella olevat muuttujat
     //Käyttäjän napit
     private Casino casino = new Casino();
-
-    //get money/conversion from elsewhere this data is temp
     private int minNPCMoney = 100;
-    private int maxNPCMoney = 10000;
+    private int maxNPCMoney = 1000;
     private int ChipConvesion = 15;
 
     private IEngine engine;
@@ -61,7 +60,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     public void setUI(ISimulatorUI ui){
         this.ui = ui;
     }
-
+    /**
+     * Starts the simulation threads and time running.
+     * If a simulation is already running, it will be reset before starting a new one.
+     * */
     @Override
     public void startSimulation() {
         if (simulationThread != null && simulationThread.isAlive()) {
@@ -93,6 +95,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 SimuUpdateEvent.Type.PLAYER_ADDED, player
         ));
     }
+    /**
+     * time advance method, called by the engine every time it advances time. It checks if the simulation is paused and resumes it if necessary,
+     * then processes any players that have left the casino and updates the statistics accordingly.
+     * */
     public void timeAdvance(){
         if(casino.getIsPaused()){//move it here because why not
             logEvent("Simulator moving forward");
@@ -171,8 +177,12 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         //Initialize simu.model.casino and other necessary variables
         GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
         GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
+        GameAbstract billiards = new Billiards(4, 30, 1.2, 0.5, 30);
+        GameAbstract pachinko = new Pachinko(6, 2, 1.5, 0.4, 15);
         casino.addGame(blackjack);
         casino.addGame(poker);
+        casino.addGame(billiards);
+        casino.addGame(pachinko);
         displayStatistics();
         displayGameTable();
         StartBtn.setOnAction(e -> startSimulation());
@@ -199,7 +209,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         SimuSpeed.setValue(5.0);
         startUIUpdate();
     }
-
+    /**
+     * adjustSpeed takes the value of sliderVal, and calculates a new delay for the engine based on an exponential function.
+     * */
     private void adjustSpeed(double sliderVal) {
         if (engine != null) {
             double delayMS = 50.0 * Math.pow(2.0, (10.0 - sliderVal) / 2.0);
@@ -207,7 +219,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             engine.setDelay(newDelay);
         }
     }
-
+    /**
+     * This method takes care of updating UI in a thread safe way, utilising ENUM types from SimuUpdateEvent class to display the appropriate data.
+     * */
     private void startUIUpdate() {
         updateTimer = new AnimationTimer() {
             @Override
@@ -216,10 +230,11 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 while ((event = updateQueue.poll()) != null) {
                     switch (event.getType()) {
                         case PLAYER_ADDED:
-                            logEvent("Player added with " + ((NPC) event.getData()).getMoney() + "€ and a preference for " + ((NPC) event.getData()).getGamePreference());
+                            logEvent("Player " + ((NPC) event.getData()).getId() + " added with " + ((NPC) event.getData()).getMoney() + "€ and a preference for " + ((NPC) event.getData()).getGamePreference());
                             break;
                         case PLAYER_REMOVED:
-                            logEvent("Player removed with " + ((NPC) event.getData()).getMoney() + "€");
+                            logEvent("Player " + ((NPC) event.getData()).getId() + " removed with " + ((NPC) event.getData()).getMoney() + "€, and " + ((NPC) event.getData()).getCasinoLoan() + "€ loan from casino.");
+                            logEvent("PLayer also got a loan of: " + ((NPC) event.getData()).getCasinoLoan());
                             break;
                         case GAME_STARTED:
                             logEvent("Game started: " + ((GameAbstract) event.getData()).getTotalPlayers() + " players.");
@@ -241,7 +256,6 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         };
         updateTimer.start();
     }
-
 
     public void queueUpdate(SimuUpdateEvent event) {
         updateQueue.offer(event);
@@ -279,6 +293,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         }
     }
 
+    /**
+     * The following methods are responsible for displaying the game tables and their details, some intended for initialization and some that can be called while simulation is running.
+     * */
     public void displayGameTable() {
         Accordion accordion = (Accordion) GameTableContainer.getChildren().get(0);
         accordion.getPanes().clear();
@@ -298,6 +315,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                     new Label("Active: " + game.getCurrentPlayerNum())
             );
             pane.setContent(content);
+            pane.setOnMouseClicked(e -> displayGameTableDetails(game));
             accordion.getPanes().add(pane);
         }
     }
@@ -437,15 +455,6 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 winChanceRow
 
         );
-        //GameTableDetailContainer.getChildren().clear();
-        //Get clicked simu.model.game table (ex. clickedBlackjack) -> find match (loop?) ->
-        //New Vbox/hbox -> Style new container
-        //Add all simu.model.game table info to vbox/hbox
-        //Add content manipulation buttons
-        //   (Ex.) Button winChanceBtn = new Button();
-        //      -> winChanceBtn.setOnAction(e -> clickedBlackjack.setWinChance(valueFromAField));
-        //   (...And remaining buttons)
-        //GameTableContainer.getChildren().add(newContainer);
     }
 
     public void displayStatistics() {

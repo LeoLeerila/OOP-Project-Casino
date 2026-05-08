@@ -6,6 +6,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import simu.model.game.GameAbstract;
+/**
+ * Casino is the manager model of the simulation that runs on it's own thread.
+ * */
 
 public class Casino extends Thread {
     private double totalRevenue;
@@ -34,57 +37,88 @@ public class Casino extends Thread {
         games = Collections.synchronizedList(new ArrayList<GameAbstract>());;
         playersThatLeft = Collections.synchronizedList(new ArrayList<NPC>());
     }
-
+    /**
+     * @return totalRevenue (double)
+     * */
     public double getTotalRevenue(){
         return totalRevenue;
     }
-
+    /**
+     * @return totalLoaned (double)
+     * */
     public double getTotalLoaned(){
         return totalLoaned;
     }
-
+    /**
+     * @return totalPlayers (int)
+     * */
     public double getTotalPlayers(){
         return totalPlayers;
     }
-
+    /**
+     * @return synchronized list of players
+     * */
     public synchronized List<NPC> getCurrentPlayers(){
         return players;
     }
-
+    /**
+     * @return synchronized list of initialised games
+     * */
     public List<GameAbstract> getGames(){
         return games;
     }
-
+    /**
+     * Adds the new changes to revenue to a Linked list
+     * @param amount (double)
+     * */
     public void addRevenueChange(double amount){
         casinoRevenueChange.add(amount);
     }
-
+    /**
+     * Calculates the total revenue change by adding all the changes in the Linked list to the total revenue and then clearing the Linked list
+     * */
     public void calculateRevenueChange(){
         while (casinoRevenueChange.size() > 0) {
             totalRevenue += casinoRevenueChange.removeFirst();
         }
     }
-
+    /**
+     * Adds the new changes to loans to a Linked list
+     * @param amount (double)
+     * */
     public void addLoanedChange(double amount){
         casinoLoanedChange.add(amount);
     }
-
+    /**
+     * Calculates the total loaned change by adding all the changes in the
+     * Linked list to the total loaned and then clearing the Linked list
+     * */
     public void calculateLoanedChange(){
         while (casinoLoanedChange.size() > 0) {
             totalLoaned += casinoLoanedChange.removeFirst();
         }
     }
+    /**
+     * synchronized method for adding new players to the simulation
+     * @param player (NPC)
+     * */
     public synchronized NPC addPlayer(NPC player){
         addRevenueChange(player.getMoney());
         players.add(player);
         totalPlayers++;
         return player;
     }
-
+    /**
+     * Adds new game
+     * @param game (GameAbstract)
+     * */
     public void addGame(GameAbstract game){
         games.add(game);
     }
-
+    /**
+     * removes a specified player
+     * @param player (NPC)
+     * */
     public void removePlayer(NPC player){
         addRevenueChange(-1 * player.getChipsToMoneyFinal());
         //player.setRemovalTime(time);
@@ -92,19 +126,30 @@ public class Casino extends Thread {
         players.remove(player);
 
     }
-
+    /**
+     * @return playersThatLeft (List of NPCs)
+     * */
     public synchronized List<NPC> getPlayersThatLeft() {
         return playersThatLeft; // temp arraylist to return
     }
+    /**
+     * synchronized method to clear the list of players that left the casino
+     * */
     public synchronized void clearPlayersThatLeft(){
         if(!playersThatLeft.isEmpty())
             playersThatLeft.clear(); //clear all players
     }
-
+    /**
+     * removes game
+     * @param game (GameAbstract)
+     * */
     public void removeGame(GameAbstract game){
         games.remove(game);
     }
-
+    /**
+     * Updates the game times on game tables and progresses the game.
+     * @param change (int)
+     * */
     public void updateGameTimes(int change){
         for (GameAbstract game : games){
             game.updateCurrentGameTime(change);
@@ -113,7 +158,9 @@ public class Casino extends Thread {
             }
         }
     }
-
+    /**
+     * Starts the events in game tables.
+     * */
     public void startGames(){
         for (GameAbstract game : games) {
             if (!game.isGameInProgress()) {
@@ -141,7 +188,13 @@ public class Casino extends Thread {
         }
         return gamesByType;
     }
-
+    /**
+     * Handles the free players by checking if they are in a game, if not it checks
+     * if they have enough chips to play or if they are willing to take a loan, then
+     * it checks for available games and adds them to the queue of the game
+     * they prefer, if there are no available games it removes them from the
+     * simulation.
+     * */
     public void handleFreePlayers(){
         ArrayList<NPC> freePlayers = new ArrayList<>();
         for (NPC player : players) {
@@ -175,6 +228,11 @@ public class Casino extends Thread {
             }
         }
     }
+    /**
+     * Checker for loan taking.
+     * @param player, amount (NPC, int)
+     * @return true if the player takes the loan, false if not
+     * */
     public Boolean tryTakeLoan(NPC player, int amount){
         if(Math.random() > player.getCasinoLoanWill()){
             player.addChipsLoaned(amount);
@@ -185,7 +243,11 @@ public class Casino extends Thread {
         }
     }
 
-
+    /**
+     * The main loop of the casino thread, it handles the free players,
+     * starts the games, calculates the revenue and loaned changes, updates
+     * the game times and then pauses the thread until it is resumed again.
+     * */
     @Override
     public void run() {//one big pain in the ass
         while (running) {

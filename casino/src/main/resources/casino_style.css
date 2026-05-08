@@ -56,6 +56,16 @@
     -fx-border-color: #c9a227;
 }
 
+.text-area .scroll-bar {
+    -fx-hbar-policy: always;
+    -fx-border-color: #c9a227;
+    -fx-background-color: #7a1f1f;
+}
+.text-area .scroll-bar .thumb {
+    -fx-background-color: #1c4a34;
+}
+
+
 .titled-pane > .title {
     -fx-background-color: #7a1f1f;
     -fx-border-color: #c9a227;
