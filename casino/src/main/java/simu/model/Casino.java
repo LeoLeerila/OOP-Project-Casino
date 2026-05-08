@@ -1,27 +1,39 @@
 package simu.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import simu.model.game.GameAbstract;
 
-public class Casino {
+public class Casino extends Thread {
     private double totalRevenue;
-    private LinkedList<Double> casinoRevenueChange;
+    private ConcurrentLinkedQueue<Double> casinoRevenueChange;
     private double totalLoaned;
-    private LinkedList<Double> casinoLoanedChange;
+    private ConcurrentLinkedQueue<Double> casinoLoanedChange;
     private int totalPlayers;
-    private ArrayList<NPC> players;
-    private ArrayList<GameAbstract> games;
+    //private ArrayList<NPC> players;
+    private ConcurrentLinkedQueue<NPC> players;
+    private List<GameAbstract> games;
+
+    private List<NPC> playersThatLeft; //to see what players left
+
+    //this is for the thing to make this into a thread
+    private volatile boolean running = true;
+    private volatile boolean paused = false;
+    private final Object pauseLock = new Object();
 
     public Casino(){
         totalRevenue = 0.0;
         totalLoaned = 0.0;
         totalPlayers = 0;
-        casinoRevenueChange = new LinkedList<Double>();
-        casinoLoanedChange = new LinkedList<Double>();
-        players = new ArrayList<NPC>();
-        games = new ArrayList<GameAbstract>();
+        casinoRevenueChange = new ConcurrentLinkedQueue<Double>();
+        casinoLoanedChange = new ConcurrentLinkedQueue<Double>();
+        players = new ConcurrentLinkedQueue<NPC>();
+        games = Collections.synchronizedList(new ArrayList<GameAbstract>());;
+        playersThatLeft = Collections.synchronizedList(new ArrayList<NPC>());
     }
 
     public double getTotalRevenue(){
@@ -36,11 +48,11 @@ public class Casino {
         return totalPlayers;
     }
 
-    public ArrayList<NPC> getCurrentPlayers(){
+    public synchronized ConcurrentLinkedQueue<NPC> getCurrentPlayers(){
         return players;
     }
 
-    public ArrayList<GameAbstract> getGames(){
+    public List<GameAbstract> getGames(){
         return games;
     }
 
@@ -49,8 +61,13 @@ public class Casino {
     }
 
     public void calculateRevenueChange(){
-        while (casinoRevenueChange.size() > 0) {
-            totalRevenue += casinoRevenueChange.removeFirst();
+        while (!casinoRevenueChange.isEmpty()) {
+            var value = casinoRevenueChange.poll();
+            if (value == null){
+                System.out.println("VITTU SAATANA, value tyhjä");
+            }else {
+                totalRevenue += value;
+            }
         }
     }
 
@@ -59,11 +76,17 @@ public class Casino {
     }
 
     public void calculateLoanedChange(){
-        while (casinoLoanedChange.size() > 0) {
-            totalLoaned += casinoLoanedChange.removeFirst();
+        while (!casinoLoanedChange.isEmpty()) {
+            var value = casinoLoanedChange.poll();
+            if (value == null){
+                System.out.println("VITTU SAATANA, value tyhjä");
+            }else {
+                totalLoaned += value;
+            }
         }
     }
-    public NPC addPlayer(NPC player){
+    public synchronized NPC addPlayer(int minNPCMoney, int maxNPCMoney, int ChipConvesion){
+        NPC player = new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, getGames());
         addRevenueChange(player.getMoney());
         players.add(player);
         totalPlayers++;
@@ -75,16 +98,26 @@ public class Casino {
     }
 
     public void removePlayer(NPC player){
-        addRevenueChange(-1 * player.getChipsToMoney());
+        addRevenueChange(-1 * player.getChipsToMoneyFinal());
         //player.setRemovalTime(time);
+        playersThatLeft.add(player);
         players.remove(player);
+
+    }
+
+    public synchronized List<NPC> getPlayersThatLeft() {
+        return playersThatLeft; // temp arraylist to return
+    }
+    public synchronized void clearPlayersThatLeft(){
+        if(!playersThatLeft.isEmpty())
+            playersThatLeft.clear(); //clear all players
     }
 
     public void removeGame(GameAbstract game){
         games.remove(game);
     }
 
-    public void updateGameTimes(int change){
+    public synchronized void updateGameTimes(int change){
         for (GameAbstract game : games){
             game.updateCurrentGameTime(change);
             if (game.getCurrentGameTime() <= 0) {
@@ -93,7 +126,7 @@ public class Casino {
         }
     }
 
-    public void startGames(){
+    public synchronized void startGames(){
         for (GameAbstract game : games) {
             if (!game.isGameInProgress()) {
                 game.startGame();
@@ -122,32 +155,89 @@ public class Casino {
     }
 
     public void handleFreePlayers(){
-        ArrayList<NPC> freePlayers = new ArrayList<>();
+        List<NPC> freePlayers = Collections.synchronizedList(new ArrayList<NPC>());
         for (NPC player : players) {
             if (!player.IsInGame()) {
                 freePlayers.add(player);
             }
         }
         for (NPC player : freePlayers) {
-            ArrayList<GameAbstract> availableGames = new ArrayList<>();
-            for (GameAbstract game : games){
-                if (game.getPlayerQueueSize() < game.getMaxPlayers() && game.getMinBet() < player.getChips()) {
-                    availableGames.add(game);
-                }
-            }
-            
-            for (GameAbstract game : availableGames) {
-                if (game.getType() == player.getGamePreference() && !player.IsInGame()) {
-                    game.addPlayerToQueue(player);
-                    player.toggleInGame();
-                }
-            }
-            if (!player.IsInGame() && availableGames.size() > 0) {
-                availableGames.get(0).addPlayerToQueue(player);
-                player.toggleInGame();
-            } else if (!player.IsInGame()) {
+            if (player.getChipsTarget() < player.getChips()){
                 removePlayer(player);
+            }else {
+                ArrayList<GameAbstract> availableGames = new ArrayList<>();
+                for (GameAbstract game : games) {
+                    if (game.getPlayerQueueSize() < game.getMaxPlayers() && (game.getMinBet() < player.getChips() || tryTakeLoan(player, (int) (Math.round(game.getMinBet() * 1.2))))) {
+                        availableGames.add(game);
+                    }
+                }
+
+                for (GameAbstract game : availableGames) {
+                    if (game.getType() == player.getGamePreference() && !player.IsInGame()) {
+                        game.addPlayerToQueue(player);
+                        player.toggleInGame();
+                    }
+                }
+                if (!player.IsInGame() && availableGames.size() > 0) {
+                    availableGames.get(0).addPlayerToQueue(player);
+                    player.toggleInGame();
+                } else if (!player.IsInGame()) {
+                    removePlayer(player);
+                }
             }
         }
     }
+    public Boolean tryTakeLoan(NPC player, int amount){
+        if(Math.random() > player.getCasinoLoanWill()){
+            player.addChipsLoaned(amount);
+            addLoanedChange(player.getChipsToMoney());
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
+    @Override
+    public void run() {//one big pain in the ass
+        while (running) {
+            synchronized (pauseLock) {
+                if (!running) {
+                    break;
+                }
+                if (paused) {
+                    try {
+                        pauseLock.wait();
+                    } catch (InterruptedException e) {
+                        System.err.println(e);
+                        break;
+                    }
+                    if (!running) {
+                        break;
+                    }
+                }
+            }
+            clearPlayersThatLeft();
+            handleFreePlayers();
+            startGames();
+            calculateRevenueChange();
+            calculateLoanedChange();
+            updateGameTimes(-1*getLowestGameTime());
+            pause();
+        }
+    }
+    public void stopCopy() {
+        running = false;
+        resumeCopy();
+    }
+    public void pause() {
+        paused = true;
+    }
+    public void resumeCopy() {
+        synchronized (pauseLock) {
+            paused = false;
+            pauseLock.notify();
+        }
+    }
+    public boolean getIsPaused(){return paused;};
 }

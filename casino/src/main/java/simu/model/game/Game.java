@@ -2,6 +2,7 @@ package simu.model.game;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import simu.model.NPC;
 
@@ -17,7 +18,7 @@ interface Game {
     int getPlayerQueueSize();
     double getCashOut();
     double getWinChance();
-    LinkedList<NPC> getPlayerQueue();
+    ConcurrentLinkedQueue<NPC> getPlayerQueue();
     ArrayList<NPC> getCurrentPlayers();
     boolean isGameInProgress();
     void startGame();

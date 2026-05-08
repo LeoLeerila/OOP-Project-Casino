@@ -14,6 +14,8 @@ import simu.model.MyEngine;
 import simu.model.NPC;
 import simu.model.game.GameAbstract;
 import simu.model.game.Blackjack;
+import simu.model.Save;
+import simu.framework.Clock;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -25,8 +27,11 @@ import simu.model.game.Poker;
 import view.ISimulatorUI;
 
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
+
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javafx.animation.AnimationTimer;
 
@@ -45,6 +50,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     private Thread simulationThread;
     private boolean isSimulationPaused = false;
     private GameAbstract selectedGame;
+    private Thread casinoThread;
 
     //THREAD SAFE QUEUES FOR UPDATES
     private final ConcurrentLinkedQueue<SimuUpdateEvent> updateQueue = new ConcurrentLinkedQueue<>();
@@ -81,26 +87,35 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         if (selectedGame != null) {
             displayGameTableDetails(selectedGame);
         }
-    }
+        casinoThread = new Thread(casino);
+        casinoThread.start();
 
-    public void createPlayer() {
-        NPC player = casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames()));
+    }
+    public void createPlayer(){ //this mäybe needs to be thread safe
+        NPC player = casino.addPlayer(minNPCMoney, maxNPCMoney, ChipConvesion);
         queueUpdate(new SimuUpdateEvent(
                 SimuUpdateEvent.Type.PLAYER_ADDED, player
         ));
     }
+    public void timeAdvance(){
+        if(casino.getIsPaused()){//move it here because why not
+            logEvent("Simulator moving forward");
+            casino.resumeCopy();
+        }
+        CopyOnWriteArrayList<NPC> PlayersThatLeft = new CopyOnWriteArrayList<NPC>(casino.getPlayersThatLeft());
+        if(!PlayersThatLeft.isEmpty()){
+            for (NPC player : PlayersThatLeft){
+                queueUpdate(new SimuUpdateEvent(
+                        SimuUpdateEvent.Type.PLAYER_REMOVED, player
+                ));
+            }
+            queueUpdate(new SimuUpdateEvent(
+                    SimuUpdateEvent.Type.STATISTICS_UPDATE, null
+            ));
+            //Save statistics
+            Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
+        }
 
-    public void timeAdvance() {
-        casino.startGames();
-        casino.updateGameTimes(-1 * casino.getLowestGameTime());
-        casino.handleFreePlayers();
-        casino.calculateRevenueChange();
-        casino.calculateLoanedChange();
-        logEvent("Revee: " + casino.getTotalRevenue());
-
-        queueUpdate(new SimuUpdateEvent(
-                SimuUpdateEvent.Type.STATISTICS_UPDATE, null
-        ));
     }
 
     @FXML
@@ -157,8 +172,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     @FXML
     public void initialize() {
         //Initialize simu.model.casino and other necessary variables
-        GameAbstract poker = new Poker(5, 40, 20, 0.5, 20);
-        GameAbstract blackjack = new Blackjack(4, 10, 1.5, 0.3, 10);
+        GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
+        GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
         casino.addGame(blackjack);
         casino.addGame(poker);
         displayStatistics();
@@ -166,7 +181,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         StartBtn.setOnAction(e -> startSimulation());
         PauseBtn.setOnAction(e -> pauseSimulation());
         ResetBtn.setOnAction(e -> resetSimulation());
-        AddPlayerBtn.setOnAction(e -> casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames())));
+        AddPlayerBtn.setOnAction(e -> createPlayer());
         GameTableAccordion.expandedPaneProperty().addListener((obs, oldPane, newPane) -> {
             GameTableDetailContainer.getChildren().clear();
 
@@ -203,10 +218,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 while ((event = updateQueue.poll()) != null) {
                     switch (event.getType()) {
                         case PLAYER_ADDED:
-                            logEvent("Player added with " + ((NPC) event.getData()).getMoney() + "€ and a preference for " + ((NPC) event.getData()).getGamePreference());
+                            logEvent("Player added with (id) "+((NPC) event.getData()).getId()+", "+ ((NPC) event.getData()).getMoney() + "€ and a preference for "+ ((NPC) event.getData()).getGamePreference());
                             break;
                         case PLAYER_REMOVED:
-                            logEvent("Player removed with " + ((NPC) event.getData()).getMoney() + "€");
+                            logEvent("Player removed with (id) "+((NPC) event.getData()).getId()+", " + ((NPC) event.getData()).getMoney() + "€");
                             break;
                         case GAME_STARTED:
                             logEvent("Game started: " + ((GameAbstract) event.getData()).getTotalPlayers() + " players.");
@@ -232,6 +247,9 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
 
     public void queueUpdate(SimuUpdateEvent event) {
         updateQueue.offer(event);
+        //initialize statistics save file
+        Save.initialSaveSimulation();
+
     }
 
     public void pauseSimulation() {
@@ -437,7 +455,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         Label totalRevenue = new Label("Total Revenue: " + casino.getTotalRevenue() + "€");
         Label totalLoaned = new Label("Total loaned: " + casino.getTotalLoaned() + "€");
         Label totalPlayers = new Label("Total players: " + casino.getTotalPlayers());
+        Label currentPlayers = new Label("Current players: " + casino.getCurrentPlayers().size());
         StatisticsContainer.getChildren().clear();
-        StatisticsContainer.getChildren().addAll(fillerText, totalRevenue, totalLoaned, totalPlayers);
+        StatisticsContainer.getChildren().addAll(fillerText, totalRevenue, totalLoaned, totalPlayers, currentPlayers);
     }
 }
