@@ -12,7 +12,11 @@ import simu.framework.SimuUpdateEvent;
 import simu.model.Casino;
 import simu.model.MyEngine;
 import simu.model.NPC;
-import simu.model.game.*;
+import simu.model.game.GameAbstract;
+import simu.model.game.Pachinko;
+import simu.model.game.Billiards;
+import simu.model.game.Bingo;
+import simu.model.game.Blackjack;
 import simu.model.Save;
 import simu.framework.Clock;
 
@@ -22,13 +26,18 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
+import simu.model.game.Poker;
+import simu.model.game.Roulette;
+import simu.model.game.Slotmachine;
 import view.ISimulatorUI;
 
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
+
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import javafx.animation.AnimationTimer;
 /**
  * MainController class is the main logic handler and caller of the program.
@@ -37,7 +46,9 @@ import javafx.animation.AnimationTimer;
 public class MainController implements IControllerVtoM, IControllerMtoV {
     //Huom: kuvakaappauksen perusteella olevat muuttujat
     //Käyttäjän napit
-    private Casino casino = new Casino();
+    private Casino casino;
+
+    //get money/conversion from elsewhere this data is temp
     private int minNPCMoney = 100;
     private int maxNPCMoney = 1000;
     private int ChipConvesion = 15;
@@ -48,6 +59,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     private boolean isSimulationPaused = false;
     private Thread casinoThread;
     private GameAbstract selectedGame;
+    private Thread casinoThread;
 
     //THREAD SAFE QUEUES FOR UPDATES
     private final ConcurrentLinkedQueue<SimuUpdateEvent> updateQueue = new ConcurrentLinkedQueue<>();
@@ -88,9 +100,12 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         if (selectedGame != null) {
             displayGameTableDetails(selectedGame);
         }
+        casinoThread = new Thread(casino);
+        casinoThread.start();
+
     }
     public void createPlayer(){ //this mäybe needs to be thread safe
-        NPC player = casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames()));
+        NPC player = casino.addPlayer(minNPCMoney, maxNPCMoney, ChipConvesion);
         queueUpdate(new SimuUpdateEvent(
                 SimuUpdateEvent.Type.PLAYER_ADDED, player
         ));
@@ -100,6 +115,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
      * then processes any players that have left the casino and updates the statistics accordingly.
      * */
     public void timeAdvance(){
+        //Save statistics
+        Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
         if(casino.getIsPaused()){//move it here because why not
             logEvent("Simulator moving forward");
             casino.resumeCopy();
@@ -111,12 +128,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                         SimuUpdateEvent.Type.PLAYER_REMOVED, player
                 ));
             }
-            casino.clearPlayersThatLeft();
             queueUpdate(new SimuUpdateEvent(
                     SimuUpdateEvent.Type.STATISTICS_UPDATE, null
             ));
-            //Save statistics
-            Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
+
         }
 
     }
@@ -175,20 +190,14 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     @FXML
     public void initialize() {
         //Initialize simu.model.casino and other necessary variables
-        GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
-        GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
-        GameAbstract billiards = new Billiards(4, 30, 1.2, 0.5, 30);
-        GameAbstract pachinko = new Pachinko(6, 2, 1.5, 0.4, 15);
-        casino.addGame(blackjack);
-        casino.addGame(poker);
-        casino.addGame(billiards);
-        casino.addGame(pachinko);
+        casino = createCasino();
+
         displayStatistics();
         displayGameTable();
         StartBtn.setOnAction(e -> startSimulation());
         PauseBtn.setOnAction(e -> pauseSimulation());
         ResetBtn.setOnAction(e -> resetSimulation());
-        AddPlayerBtn.setOnAction(e -> casino.addPlayer(new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, casino.getGames())));
+        AddPlayerBtn.setOnAction(e -> createPlayer());
         GameTableAccordion.expandedPaneProperty().addListener((obs, oldPane, newPane) -> {
             GameTableDetailContainer.getChildren().clear();
 
@@ -208,6 +217,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         //default
         SimuSpeed.setValue(5.0);
         startUIUpdate();
+        //initialize statistics save file
+        Save.initialSaveSimulation();
     }
     /**
      * adjustSpeed takes the value of sliderVal, and calculates a new delay for the engine based on an exponential function.
@@ -230,11 +241,10 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
                 while ((event = updateQueue.poll()) != null) {
                     switch (event.getType()) {
                         case PLAYER_ADDED:
-                            logEvent("Player " + ((NPC) event.getData()).getId() + " added with " + ((NPC) event.getData()).getMoney() + "€ and a preference for " + ((NPC) event.getData()).getGamePreference());
+                            logEvent("Player added with (id) "+((NPC) event.getData()).getId()+", "+ ((NPC) event.getData()).getMoney() + "€ and a preference for "+ ((NPC) event.getData()).getGamePreference());
                             break;
                         case PLAYER_REMOVED:
-                            logEvent("Player " + ((NPC) event.getData()).getId() + " removed with " + ((NPC) event.getData()).getMoney() + "€, and " + ((NPC) event.getData()).getCasinoLoan() + "€ loan from casino.");
-                            logEvent("PLayer also got a loan of: " + ((NPC) event.getData()).getCasinoLoan());
+                            logEvent("Player removed with (id) "+((NPC) event.getData()).getId()+", " + ((NPC) event.getData()).getMoney() + "€");
                             break;
                         case GAME_STARTED:
                             logEvent("Game started: " + ((GameAbstract) event.getData()).getTotalPlayers() + " players.");
@@ -259,9 +269,6 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
 
     public void queueUpdate(SimuUpdateEvent event) {
         updateQueue.offer(event);
-        //initialize statistics save file
-        Save.initialSaveSimulation();
-
     }
 
     public void pauseSimulation() {
@@ -275,6 +282,11 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     }
 
     public void resetSimulation() {
+        //reset statistics save file
+        Save.initialSaveSimulation();
+
+        //create new casino object
+        casino = createCasino();
         if (updateTimer != null) {
             updateTimer.stop();
         }
@@ -465,5 +477,29 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         Label currentPlayers = new Label("Current players: " + casino.getCurrentPlayers().size());
         StatisticsContainer.getChildren().clear();
         StatisticsContainer.getChildren().addAll(fillerText, totalRevenue, totalLoaned, totalPlayers, currentPlayers);
+    }
+
+    private Casino createCasino() {
+        //create casino
+        casino = new Casino();
+
+        //add games to casino
+        GameAbstract game = new Poker(5, 40, 1.6, 0.5, 20);
+        casino.addGame(game);
+        game = new Blackjack(4,20,2,0.3,10);
+        casino.addGame(game);
+        game = new Roulette(8,5,3,0.15,5);
+        casino.addGame(game);
+        game = new Slotmachine(1,5,1.1,0.9,1);
+        casino.addGame(game);
+        game = new Bingo(20,10,1.5,0.4,10);
+        casino.addGame(game);
+        game = new Pachinko(1,1,1.1,0.7,1);
+        casino.addGame(game);
+        game = new Billiards(4,50,2,0.25,20);
+        casino.addGame(game);
+
+
+        return casino;
     }
 }

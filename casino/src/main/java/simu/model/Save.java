@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import simu.model.game.GameAbstract;
 
@@ -21,7 +22,7 @@ public class Save {
                 return;
             }
         }
-        public static void saveSimulation(double time, double revenue, double loans, int NPCNum, List<NPC> NPCs, int gameNum, List<GameAbstract> games){
+        public static void saveSimulation(double time, double revenue, double loans, int NPCNum, ConcurrentLinkedQueue<NPC> NPCs, int gameNum, List<GameAbstract> games){
             String NPCString = "";
             String gameString = "";
 

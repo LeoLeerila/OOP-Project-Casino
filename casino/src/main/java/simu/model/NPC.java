@@ -92,7 +92,7 @@ public class NPC {
     public boolean IsInGame(){return isInGame;}
     public double getChipsToMoney(){return chips * convesion;}
     public int getBet(){return lastBet;}
-    public double getChipsToMoneyFinal(){return money - casinoLoan;}
+    public double getChipsToMoneyFinal(){return getChipsToMoney() - casinoLoan;}
     public double getRemovalTime() {return removalTime;}
     public double getArrivalTime() {return arrivalTime;}
 }
