@@ -66,6 +66,7 @@ public class Casino extends Thread {
             if (value == null){
                 System.out.println("VITTU SAATANA, value tyhjä");
             }else {
+                System.out.println("Money change: " + value);
                 totalRevenue += value;
             }
         }
@@ -87,7 +88,7 @@ public class Casino extends Thread {
     }
     public synchronized NPC addPlayer(int minNPCMoney, int maxNPCMoney, int ChipConvesion){
         NPC player = new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, getGames());
-        addRevenueChange(player.getMoney());
+        addRevenueChange(player.getChipsToMoney());
         players.add(player);
         totalPlayers++;
         return player;
@@ -222,7 +223,7 @@ public class Casino extends Thread {
             startGames();
             calculateRevenueChange();
             calculateLoanedChange();
-            updateGameTimes(-1*getLowestGameTime());
+            updateGameTimes(-1); //-1*getLowestGameTime()
             pause();
         }
     }

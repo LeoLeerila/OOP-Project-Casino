@@ -38,7 +38,7 @@ import javafx.animation.AnimationTimer;
 public class MainController implements IControllerVtoM, IControllerMtoV {
     //Huom: kuvakaappauksen perusteella olevat muuttujat
     //Käyttäjän napit
-    private Casino casino = new Casino();
+    private Casino casino;
 
     //get money/conversion from elsewhere this data is temp
     private int minNPCMoney = 100;
@@ -98,6 +98,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         ));
     }
     public void timeAdvance(){
+        //Save statistics
+        Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
         if(casino.getIsPaused()){//move it here because why not
             logEvent("Simulator moving forward");
             casino.resumeCopy();
@@ -112,8 +114,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
             queueUpdate(new SimuUpdateEvent(
                     SimuUpdateEvent.Type.STATISTICS_UPDATE, null
             ));
-            //Save statistics
-            Save.saveSimulation(Clock.getInstance().getTime(), casino.getTotalRevenue(), casino.getTotalLoaned(), casino.getCurrentPlayers().size(), casino.getCurrentPlayers(), casino.getGames().size(), casino.getGames());
+            
         }
 
     }
@@ -172,10 +173,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     @FXML
     public void initialize() {
         //Initialize simu.model.casino and other necessary variables
-        GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
-        GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
-        casino.addGame(blackjack);
-        casino.addGame(poker);
+        casino = createCasino();
+        
         displayStatistics();
         displayGameTable();
         StartBtn.setOnAction(e -> startSimulation());
@@ -200,6 +199,8 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         //default
         SimuSpeed.setValue(5.0);
         startUIUpdate();
+        //initialize statistics save file
+        Save.initialSaveSimulation();
     }
 
     private void adjustSpeed(double sliderVal) {
@@ -247,8 +248,7 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
 
     public void queueUpdate(SimuUpdateEvent event) {
         updateQueue.offer(event);
-        //initialize statistics save file
-        Save.initialSaveSimulation();
+        
 
     }
 
@@ -263,6 +263,11 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     }
 
     public void resetSimulation() {
+        //reset statistics save file
+        Save.initialSaveSimulation();
+
+        //create new casino object
+        casino = createCasino();
         if (updateTimer != null) {
             updateTimer.stop();
         }
@@ -458,5 +463,19 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         Label currentPlayers = new Label("Current players: " + casino.getCurrentPlayers().size());
         StatisticsContainer.getChildren().clear();
         StatisticsContainer.getChildren().addAll(fillerText, totalRevenue, totalLoaned, totalPlayers, currentPlayers);
+    }
+
+    private Casino createCasino() {
+        //create casino
+        casino = new Casino();
+
+        //add games to casino
+        GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
+        GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
+        casino.addGame(blackjack);
+        casino.addGame(poker);
+
+
+        return casino;
     }
 }
