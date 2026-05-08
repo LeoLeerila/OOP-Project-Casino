@@ -13,6 +13,9 @@ import simu.model.Casino;
 import simu.model.MyEngine;
 import simu.model.NPC;
 import simu.model.game.GameAbstract;
+import simu.model.game.Pachinko;
+import simu.model.game.Billiards;
+import simu.model.game.Bingo;
 import simu.model.game.Blackjack;
 import simu.model.Save;
 import simu.framework.Clock;
@@ -24,6 +27,8 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 import simu.model.game.Poker;
+import simu.model.game.Roulette;
+import simu.model.game.Slotmachine;
 import view.ISimulatorUI;
 
 
@@ -470,10 +475,20 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
         casino = new Casino();
 
         //add games to casino
-        GameAbstract poker = new Poker(5, 40, 1.6, 0.5, 20);
-        GameAbstract blackjack = new Blackjack(4, 10, 2, 0.3, 10);
-        casino.addGame(blackjack);
-        casino.addGame(poker);
+        GameAbstract game = new Poker(5, 40, 1.6, 0.5, 20);
+        casino.addGame(game);
+        game = new Blackjack(4,20,2,0.3,10);
+        casino.addGame(game);
+        game = new Roulette(8,5,3,0.15,5);
+        casino.addGame(game);
+        game = new Slotmachine(1,5,1.1,0.9,1);
+        casino.addGame(game);
+        game = new Bingo(20,10,1.5,0.4,10);
+        casino.addGame(game);
+        game = new Pachinko(1,1,1.1,0.7,1);
+        casino.addGame(game);
+        game = new Billiards(4,50,2,0.25,20);
+        casino.addGame(game);
 
 
         return casino;
