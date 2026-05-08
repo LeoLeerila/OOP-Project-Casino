@@ -22,7 +22,7 @@ public class Casino extends Thread {
     private List<GameAbstract> games;
 
     private List<NPC> playersThatLeft; //to see what players left
-
+    private static int id;
     //this is for the thing to make this into a thread
     private volatile boolean running = true;
     private volatile boolean paused = false;
@@ -117,7 +117,7 @@ public class Casino extends Thread {
      * @param ChipConvesion
      * */
     public synchronized NPC addPlayer(int minNPCMoney, int maxNPCMoney, int ChipConvesion){
-        NPC player = new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, getGames());
+        NPC player = new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, getGames(), id++);
         addRevenueChange(player.getChipsToMoney());
         players.add(player);
         totalPlayers++;

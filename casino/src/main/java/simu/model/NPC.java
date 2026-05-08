@@ -25,14 +25,14 @@ public class NPC {
     private boolean isInGame;
     private int lastBet;
 
-    public NPC(int minMoney,int maxMoney, int moneyChange, List<GameAbstract> gameList){
+    public NPC(int minMoney,int maxMoney, int moneyChange, List<GameAbstract> gameList, int id){
         this.convesion = moneyChange;
         this.money = (int) Math.round(Math.random() * (maxMoney-minMoney+1)) + minMoney;
         this.chips = (int) Math.round(this.money / convesion);
         this.casinoLoanWill = Math.random();
         this.chipsTarget = (int) Math.round(this.chips+((this.chips * Math.random())*2));
         this.gamePreference = gameList.get((int) (Math.random() * (gameList.size()))).getType();
-        this.id = _id++;
+        this.id = id;
         this.arrivalTime = Clock.getInstance().getTime();
 
     }

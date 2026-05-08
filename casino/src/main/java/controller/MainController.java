@@ -59,7 +59,6 @@ public class MainController implements IControllerVtoM, IControllerMtoV {
     private boolean isSimulationPaused = false;
     private Thread casinoThread;
     private GameAbstract selectedGame;
-    private Thread casinoThread;
 
     //THREAD SAFE QUEUES FOR UPDATES
     private final ConcurrentLinkedQueue<SimuUpdateEvent> updateQueue = new ConcurrentLinkedQueue<>();
