@@ -104,7 +104,7 @@ public abstract class GameAbstract implements Game {
         gameInProgress = false;
         // TODO: loop all players, if rng > winChance, call getCurrentBet method, call setPlayerMoney method
         for (NPC player : currentPlayers) {
-            if (Math.random() > winChance) {
+            if (Math.random() < winChance) {
                 player.addChips((int) Math.round(player.getBet() * cashOutMult));
             }
             player.toggleInGame();
