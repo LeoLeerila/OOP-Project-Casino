@@ -1,0 +1,26 @@
+-classpath
+'/home/kaiffari/.m2/repository/org/openjfx/javafx/20.0.1/javafx-20.0.1.pom:/home/kaiffari/.m2/repository/org/openjfx/javafx-graphics/20.0.1/javafx-graphics-20.0.1.jar:/home/kaiffari/.m2/repository/org/openjfx/javafx-graphics/20.0.1/javafx-graphics-20.0.1-linux.jar:/home/kaiffari/.m2/repository/org/openjfx/javafx-base/20.0.1/javafx-base-20.0.1.jar:/home/kaiffari/.m2/repository/org/openjfx/javafx-base/20.0.1/javafx-base-20.0.1-linux.jar:/home/kaiffari/.m2/repository/org/openjfx/javafx-fxml/20.0.1/javafx-fxml-20.0.1.jar:/home/kaiffari/.m2/repository/org/openjfx/javafx-fxml/20.0.1/javafx-fxml-20.0.1-linux.jar:/home/kaiffari/.m2/repository/org/openjfx/javafx-controls/20.0.1/javafx-controls-20.0.1.jar:/home/kaiffari/.m2/repository/org/openjfx/javafx-controls/20.0.1/javafx-controls-20.0.1-linux.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'17'
+-sourcepath
+'/home/kaiffari/Desktop/Koulu/Object Oriented Programming/OOP-Project-Casino/casino/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2026. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/home/kaiffari/Desktop/Koulu/Object Oriented Programming/OOP-Project-Casino/casino/target/site/apidocs/target/javadoc'
+-docencoding
+'UTF-8'
+-doctitle
+'casino 1.0-SNAPSHOT API'
+-link
+'https://docs.oracle.com/en/java/javase/17/docs/api'
+-use
+-version
+-windowtitle
+'casino 1.0-SNAPSHOT API'

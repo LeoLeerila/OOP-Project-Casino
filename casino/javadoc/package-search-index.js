@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"controller"},{"l":"eduni.distributions"},{"l":"main"},{"l":"simu.framework"},{"l":"simu.model"},{"l":"simu.model.game"},{"l":"view"}];updateSearchResults();
