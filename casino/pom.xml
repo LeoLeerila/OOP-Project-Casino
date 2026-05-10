@@ -30,6 +30,24 @@
                     <mainClass>main.Main</mainClass>
                 </configuration>
             </plugin>
+
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.6.3</version> <!-- Use the latest version -->
+            <configuration>
+                <!-- Source version (matches your JDK) -->
+                <source>17</source>
+                <!-- Destination directory for generated docs (default: target/site/apidocs) -->
+                <destDir>target/javadoc</destDir>
+                <!-- Fail build if Javadoc generation errors occur (e.g., missing comments) -->
+                <failOnError>true</failOnError>
+                <!-- Link to external Javadoc (e.g., Java SE API) -->
+                <links>
+                <link>https://docs.oracle.com/en/java/javase/17/docs/api/</link>
+                </links>
+            </configuration>
+            </plugin>
         </plugins>
     </build>
 
