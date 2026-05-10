@@ -115,6 +115,7 @@ public class Casino extends Thread {
      * @param minNPCMoney
      * @param maxNPCMoney
      * @param ChipConvesion
+     * @return player (NPC)
      * */
     public synchronized NPC addPlayer(int minNPCMoney, int maxNPCMoney, int ChipConvesion){
         NPC player = new NPC(minNPCMoney, maxNPCMoney, ChipConvesion, getGames(), id++);
